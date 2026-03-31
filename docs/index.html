@@ -6,243 +6,319 @@
   <title>Iran War Summary (24 Hours)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
   <style>
+    :root {
+      --bg:       #0b0c0f;
+      --surface:  #111318;
+      --border:   #1e2130;
+      --text:     #c9d1d9;
+      --muted:    #4b5563;
+      --dim:      #374151;
+      --red:      #ef4444;
+      --orange:   #f97316;
+      --accent:   #60a5fa;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: "Georgia", serif;
-      background: #0c0d10;
-      color: #d1d5db;
-      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 16px;
+      line-height: 1.7;
     }
 
-    /* ── Header ── */
+    /* ─── Header ─────────────────────────────────────── */
     header {
-      border-bottom: 2px solid #1f2937;
-      padding: 1.5rem 2rem 1.25rem;
-      max-width: 900px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.1rem 2rem;
+    }
+
+    .header-inner {
+      max-width: 880px;
       margin: 0 auto;
-    }
-
-    .header-top {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 1rem;
       flex-wrap: wrap;
-      margin-bottom: 0.4rem;
+      gap: 0.75rem;
     }
 
-    h1 {
+    .title-block h1 {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       font-weight: 800;
-      color: #f9fafb;
+      color: #f3f4f6;
       letter-spacing: -0.01em;
     }
 
-    h1 span {
-      color: #ef4444;
+    .title-block h1 em {
+      font-style: normal;
+      color: var(--red);
     }
 
-    .live-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #ef4444;
-      text-transform: uppercase;
+    .title-block .sub {
+      font-family: -apple-system, sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
       letter-spacing: 0.1em;
-      border: 1px solid #ef444444;
-      background: #ef444411;
-      padding: 0.3em 0.7em;
-      border-radius: 4px;
-      white-space: nowrap;
+      text-transform: uppercase;
+      margin-top: 0.15rem;
     }
 
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      background: #ef4444;
-      border-radius: 50%;
-      animation: pulse 1.4s infinite;
-    }
-
-    @keyframes pulse {
-      0%,100% { opacity:1; transform:scale(1); }
-      50%      { opacity:0.4; transform:scale(1.5); }
-    }
-
-    .header-meta {
+    .header-right {
+      font-family: -apple-system, sans-serif;
       display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 0.75rem;
-      color: #6b7280;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
     }
 
-    .countdown-block {
+    #last-updated { font-size: 0.72rem; color: var(--muted); }
+
+    .timer-row {
       display: flex;
       align-items: center;
       gap: 0.4rem;
+      font-size: 0.72rem;
+      color: var(--muted);
     }
 
     #countdown {
       font-family: "Courier New", monospace;
-      font-weight: 700;
       font-size: 0.9rem;
-      color: #f97316;
+      font-weight: 700;
+      color: var(--orange);
+      background: #1a0f00;
+      border: 1px solid #7c2d1244;
+      padding: 0.1em 0.45em;
+      border-radius: 4px;
+      min-width: 3.6rem;
+      text-align: center;
     }
 
-    /* ── Main ── */
+    .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1.4s infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.3; transform:scale(1.5); }
+    }
+
+    /* ─── Layout ─────────────────────────────────────── */
     main {
-      max-width: 900px;
+      max-width: 880px;
       margin: 0 auto;
       padding: 2rem;
     }
 
-    /* ── Loading / Error ── */
-    #loading {
-      padding: 4rem 0;
+    #loading, .empty {
       text-align: center;
-      color: #4b5563;
+      padding: 5rem 0;
       font-family: -apple-system, sans-serif;
       font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.8;
     }
 
     #error-msg {
       display: none;
-      background: #1a0808;
+      font-family: -apple-system, sans-serif;
+      font-size: 0.85rem;
+      background: #1a0505;
       border: 1px solid #7f1d1d;
       color: #fca5a5;
       border-radius: 6px;
-      padding: 1rem;
-      font-family: -apple-system, sans-serif;
-      font-size: 0.85rem;
-    }
-
-    /* ── Briefing ── */
-    #briefing-wrap {
-      display: none;
-    }
-
-    .briefing-header {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #4b5563;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      border-top: 1px solid #1f2937;
-      padding-top: 1.5rem;
+      padding: 1rem 1.25rem;
       margin-bottom: 1.5rem;
     }
 
-    #briefing-text {
-      font-size: 1rem;
-      line-height: 1.85;
-      color: #d1d5db;
-      white-space: pre-wrap;
+    /* ─── Stats row ──────────────────────────────────── */
+    .stats-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
     }
 
-    /* Style the section headers inside the briefing */
-    .section-header {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: #ef4444;
+    .stat-card {
+      flex: 1 1 160px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: -apple-system, sans-serif;
+    }
+
+    .stat-card.alert-card {
+      border-color: #7f1d1d55;
+      background: #1a0808;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin: 2rem 0 0.6rem;
-      display: block;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
     }
 
-    .section-body {
-      display: block;
-      margin-bottom: 0.5rem;
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #f3f4f6;
+      line-height: 1;
     }
 
-    /* ── Activity chart ── */
-    .chart-section {
-      margin-top: 2.5rem;
-      border-top: 1px solid #1f2937;
-      padding-top: 1.5rem;
+    .alert-card .stat-value { color: var(--red); }
+    .stat-sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* ─── Charts ────────────────────────────────────── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
     }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: -apple-system, sans-serif;
+    }
+
+    .chart-card.alert-chart { border-color: #7f1d1d55; }
 
     .chart-title {
-      font-family: -apple-system, sans-serif;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
-      color: #4b5563;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 1rem;
-    }
-
-    #activity-chart { max-height: 120px; }
-
-    /* ── Sources ── */
-    .sources-section {
-      margin-top: 2rem;
-      border-top: 1px solid #1f2937;
-      padding-top: 1.25rem;
-    }
-
-    .sources-title {
-      font-family: -apple-system, sans-serif;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #4b5563;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      color: var(--muted);
       margin-bottom: 0.75rem;
     }
 
-    .sources-list {
+    @media (max-width: 600px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Briefing ──────────────────────────────────── */
+    .briefing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .briefing-eyebrow {
+      font-family: -apple-system, sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
       display: flex;
+      justify-content: space-between;
       flex-wrap: wrap;
       gap: 0.5rem;
     }
 
-    .source-chip {
+    #briefing-text {
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.85;
+    }
+
+    /* Section headers injected via JS */
+    #briefing-text .sec-head {
+      display: block;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      color: var(--red);
+      margin: 2rem 0 0.6rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #7f1d1d33;
+    }
+
+    #briefing-text .sec-head:first-child { margin-top: 0; }
+
+    #briefing-text .sec-body {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ─── Sources ──────────────────────────────────── */
+    .sources-row {
       font-family: -apple-system, sans-serif;
-      font-size: 0.72rem;
-      color: #9ca3af;
-      background: #161820;
-      border: 1px solid #1f2937;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .sources-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-right: 0.25rem;
+    }
+
+    .src-chip {
+      font-size: 0.7rem;
+      color: #6b7280;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 0.2em 0.6em;
+      padding: 0.15em 0.55em;
       text-decoration: none;
+      transition: color 0.15s, border-color 0.15s;
     }
 
-    .source-chip:hover { color: #e5e7eb; border-color: #374151; }
-
-    .source-chip .count { color: #4b5563; margin-left: 0.3em; }
-
-    .empty {
-      padding: 4rem 0;
-      text-align: center;
-      color: #374151;
-      font-family: -apple-system, sans-serif;
-      font-size: 0.9rem;
-      line-height: 1.7;
-    }
+    .src-chip:hover { color: #e5e7eb; border-color: #374151; }
+    .src-chip .cnt { color: var(--dim); margin-left: 0.3em; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="header-top">
-    <h1>Iran War <span>Summary</span> (24 Hours)</h1>
-    <span class="live-badge"><span class="live-dot"></span>Live</span>
-  </div>
-  <div class="header-meta">
-    <span id="last-updated">Loading…</span>
-    <span class="countdown-block">Next update in <span id="countdown">--:--</span></span>
-    <span id="msg-count"></span>
+  <div class="header-inner">
+    <div class="title-block">
+      <h1>Iran War <em>Summary</em> (24 Hours)</h1>
+      <div class="sub">AI intelligence briefing · open-source Telegram monitoring</div>
+    </div>
+    <div class="header-right">
+      <div class="live-pill"><span class="live-dot"></span> Live</div>
+      <span id="last-updated">—</span>
+      <div class="timer-row">Next update in <span id="countdown">--:--</span></div>
+    </div>
   </div>
 </header>
 
@@ -250,35 +326,65 @@
   <div id="error-msg"></div>
   <div id="loading">Loading intelligence briefing…</div>
 
-  <div id="briefing-wrap">
-    <div class="briefing-header">Intelligence Briefing — AI generated from open source Telegram channels</div>
-    <div id="briefing-text"></div>
+  <div id="content" style="display:none">
 
-    <div class="chart-section">
-      <div class="chart-title">Combined Message Activity — Last 24 Hours</div>
-      <canvas id="activity-chart"></canvas>
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card alert-card">
+        <div class="stat-label">🚨 Red Alerts (IL)</div>
+        <div class="stat-value" id="alert-total">—</div>
+        <div class="stat-sub">Last 24 hours · via @tzevaadom_en</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Messages analysed</div>
+        <div class="stat-value" id="msg-total">—</div>
+        <div class="stat-sub" id="source-count">—</div>
+      </div>
     </div>
 
-    <div class="sources-section">
-      <div class="sources-title">Sources</div>
-      <div class="sources-list" id="sources-list"></div>
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card alert-chart">
+        <div class="chart-title">🚨 Red Alert Activity — Last 24 h</div>
+        <canvas id="alert-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Combined Message Activity — Last 24 h</div>
+        <canvas id="activity-chart"></canvas>
+      </div>
     </div>
+
+    <!-- Briefing -->
+    <div class="briefing-card">
+      <div class="briefing-eyebrow">
+        <span>Intelligence Briefing</span>
+        <span id="briefing-date">—</span>
+      </div>
+      <div id="briefing-text"></div>
+    </div>
+
+    <!-- Sources -->
+    <div class="sources-row">
+      <span class="sources-label">Sources</span>
+      <div id="sources-list" style="display:contents"></div>
+    </div>
+
   </div>
 
   <div class="empty" id="empty" style="display:none">
-    No briefing yet.<br><br>
+    No briefing yet.<br>
     Go to your GitHub repo → <strong>Actions</strong> → <strong>Summarize Channels</strong> → <strong>Run workflow</strong>
   </div>
 </main>
 
 <script>
   const REFRESH_MS = 30 * 60 * 1000;
-  let activityChart = null;
+  let chartActivity = null, chartAlerts = null;
   let nextUpdateAt  = null;
 
   /* ── Countdown ── */
-  function startCountdown(updatedAt) {
-    nextUpdateAt = new Date(updatedAt).getTime() + REFRESH_MS;
+  function startCountdown(iso) {
+    nextUpdateAt = new Date(iso).getTime() + REFRESH_MS;
   }
 
   setInterval(() => {
@@ -301,8 +407,8 @@
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
-  /* ── Render briefing text with section headers styled ── */
-  const SECTION_HEADERS = [
+  /* ── Section-header rendering ── */
+  const SECTIONS = [
     "EXECUTIVE SUMMARY",
     "SITUATION REPORT",
     "KEY DEVELOPMENTS",
@@ -312,26 +418,32 @@
   ];
 
   function renderBriefing(text) {
-    let escaped = esc(text);
-    SECTION_HEADERS.forEach(h => {
-      escaped = escaped.split(h).join(`<span class="section-header">${h}</span>`);
+    // Split on known section headers, preserving them
+    let html = esc(text);
+    SECTIONS.forEach(h => {
+      html = html.split(h).join(`<span class="sec-head">${h}</span>`);
     });
-    return escaped;
+    // Wrap remaining lines as sec-body for spacing
+    html = html.split("\n").map(line => {
+      if (line.includes('class="sec-head"') || line.trim() === "") return line;
+      return `<span class="sec-body">${line}</span>`;
+    }).join("\n");
+    return html;
   }
 
-  /* ── Activity chart ── */
-  function renderChart(counts, labels) {
-    const el = document.getElementById("activity-chart");
-    if (!el) return;
-    if (activityChart) { activityChart.destroy(); }
-    activityChart = new Chart(el, {
+  /* ── Chart factory ── */
+  function makeBar(canvasId, labels, data, color, existing) {
+    const el = document.getElementById(canvasId);
+    if (!el) return null;
+    if (existing) existing.destroy();
+    return new Chart(el, {
       type: "bar",
       data: {
-        labels: labels,
+        labels,
         datasets: [{
-          data: counts,
-          backgroundColor: "#ef444430",
-          borderColor: "#ef4444",
+          data,
+          backgroundColor: color + "33",
+          borderColor: color,
           borderWidth: 1,
           borderRadius: 2,
         }]
@@ -340,11 +452,11 @@
         responsive: true,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: i => i.raw + " messages" } }
+          tooltip: { callbacks: { label: i => i.raw + " msgs" } }
         },
         scales: {
-          x: { ticks: { color:"#374151", maxTicksLimit:8, font:{size:9} }, grid:{color:"#111318"} },
-          y: { ticks: { color:"#374151", font:{size:9} }, grid:{color:"#111318"}, beginAtZero:true }
+          x: { ticks:{ color:"#374151", maxTicksLimit:8, font:{size:8} }, grid:{color:"#111318"} },
+          y: { ticks:{ color:"#374151", font:{size:8} }, grid:{color:"#111318"}, beginAtZero:true }
         }
       }
     });
@@ -355,43 +467,44 @@
     try {
       const r = await fetch("summaries.json?_=" + Date.now());
       if (!r.ok) throw new Error("HTTP " + r.status);
-      const data = await r.json();
+      const d = await r.json();
 
       document.getElementById("loading").style.display = "none";
 
-      // Handle old per-channel array format or empty
-      if (Array.isArray(data) && data.length === 0) {
+      if (Array.isArray(d) || !d.briefing) {
         document.getElementById("empty").style.display = "block";
         return;
       }
 
-      // Expect new single-object format
-      const d = Array.isArray(data) ? null : data;
-      if (!d || !d.briefing) {
-        document.getElementById("empty").style.display = "block";
-        return;
-      }
+      // Stats
+      const ra = d.red_alerts || {};
+      document.getElementById("alert-total").textContent =
+        (ra.total ?? 0).toLocaleString();
+      document.getElementById("msg-total").textContent =
+        (d.total_messages ?? 0).toLocaleString();
+      document.getElementById("source-count").textContent =
+        (d.sources?.length ?? 0) + " channels monitored";
 
-      // Render
+      // Briefing
       document.getElementById("briefing-text").innerHTML = renderBriefing(d.briefing);
-      document.getElementById("briefing-wrap").style.display = "block";
+      document.getElementById("briefing-date").textContent = fmt(d.updated_at);
 
-      document.getElementById("last-updated").textContent = "Updated: " + fmt(d.updated_at);
-      if (d.total_messages) {
-        document.getElementById("msg-count").textContent =
-          d.total_messages.toLocaleString() + " messages analysed";
-      }
-
-      renderChart(d.hourly_counts || [], d.hourly_labels || []);
-      startCountdown(d.updated_at);
+      // Charts
+      chartAlerts   = makeBar("alert-chart",   d.hourly_labels, ra.hourly || [], "#ef4444", chartAlerts);
+      chartActivity = makeBar("activity-chart", d.hourly_labels, d.hourly_counts || [], "#60a5fa", chartActivity);
 
       // Sources
-      const list = document.getElementById("sources-list");
-      list.innerHTML = (d.sources || []).map(s =>
-        `<a class="source-chip" href="https://t.me/${esc(s.username)}" target="_blank" rel="noopener">
-          @${esc(s.username)}<span class="count">${s.count}</span>
-        </a>`
-      ).join("");
+      document.getElementById("sources-list").innerHTML =
+        (d.sources || []).map(s =>
+          `<a class="src-chip" href="https://t.me/${esc(s.username)}" target="_blank" rel="noopener">
+            @${esc(s.username)}<span class="cnt">${s.count}</span>
+          </a>`
+        ).join("");
+
+      document.getElementById("last-updated").textContent = "Updated " + fmt(d.updated_at);
+      startCountdown(d.updated_at);
+      document.getElementById("content").style.display = "block";
+      document.getElementById("empty").style.display   = "none";
 
     } catch (e) {
       document.getElementById("loading").style.display = "none";

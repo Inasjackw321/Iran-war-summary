@@ -158,17 +158,30 @@ async def main():
             channels_data.append(result)
             print(f"     {len(result['texts'])} messages")
 
-    # Build hourly activity (24 buckets across all channels combined)
-    hourly_counts = [0] * 24
     hourly_labels = [
         (now - timedelta(hours=23 - i)).strftime("%H:00")
         for i in range(24)
     ]
+
+    # Build hourly activity across all channels combined
+    hourly_counts = [0] * 24
     for ch in channels_data:
         for ts in ch["timestamps"]:
             h = int((now - ts).total_seconds() / 3600)
             if 0 <= h < 24:
                 hourly_counts[23 - h] += 1
+
+    # Red alerts — dedicated extraction from tzevaadom_en
+    alert_hourly = [0] * 24
+    alert_total  = 0
+    for ch in channels_data:
+        if ch["username"].lower() == "tzevaadom_en":
+            alert_total = len(ch["texts"])
+            for ts in ch["timestamps"]:
+                h = int((now - ts).total_seconds() / 3600)
+                if 0 <= h < 24:
+                    alert_hourly[23 - h] += 1
+            break
 
     # Generate briefing
     prompt, total_messages = build_briefing(channels_data, now)
@@ -187,12 +200,16 @@ async def main():
     ]
 
     output = {
-        "briefing":      briefing_text,
-        "sources":       sources,
+        "briefing":       briefing_text,
+        "sources":        sources,
         "total_messages": total_messages,
-        "updated_at":    now.isoformat(),
-        "hourly_counts": hourly_counts,
-        "hourly_labels": hourly_labels,
+        "updated_at":     now.isoformat(),
+        "hourly_counts":  hourly_counts,
+        "hourly_labels":  hourly_labels,
+        "red_alerts": {
+            "total":  alert_total,
+            "hourly": alert_hourly,
+        },
     }
 
     out = ROOT / "docs" / "summaries.json"
