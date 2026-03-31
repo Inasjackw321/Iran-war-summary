@@ -1,0 +1,41 @@
+name: Summarize Channels
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour
+  workflow_dispatch:       # lets you run it manually from GitHub
+
+permissions:
+  contents: write          # needed to commit summaries.json back to the repo
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r script/requirements.txt
+
+      - name: Run summarizer
+        env:
+          TELEGRAM_API_ID:   ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          TELEGRAM_SESSION:  ${{ secrets.TELEGRAM_SESSION }}
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+        run: python script/fetch_and_summarize.py
+
+      - name: Commit updated summaries
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/summaries.json
+          git diff --staged --quiet || git commit -m "chore: update summaries $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push

@@ -1,0 +1,10 @@
+# Add Telegram channels to monitor — one per line.
+# You can use any of these formats:
+#   @channelname
+#   channelname
+#   https://t.me/channelname
+
+# Examples (remove the # to activate):
+# @bbcpersian
+# @iranintl
+# @VOAIran
