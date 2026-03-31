@@ -1,0 +1,182 @@
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22263a;
+  --accent: #4f8ef7;
+  --accent-hover: #3a7ae8;
+  --text: #e8eaf0;
+  --muted: #7a7f99;
+  --error: #f76f6f;
+  --success: #4fc58e;
+  --border: #2e3250;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Modal */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: 100%; max-width: 420px;
+}
+
+.modal-box h2 { margin-bottom: 0.5rem; }
+.modal-box p  { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+  margin-top: 1rem;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus { border-color: var(--accent); }
+
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover { background: var(--accent-hover); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error { color: var(--error); font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2em; }
+
+/* Header */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.header-left h1 { font-size: 1.3rem; }
+.header-right { display: flex; gap: 0.6rem; }
+.header-right button { margin-top: 0; }
+
+.muted { color: var(--muted); font-size: 0.8rem; margin-top: 0.2rem; display: block; }
+
+/* Add channel panel */
+#add-channel-panel {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 2rem;
+}
+
+.add-channel-row {
+  display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+}
+
+.add-channel-row input { flex: 1; margin: 0; }
+.add-channel-row button { margin: 0; }
+.add-channel-row .error { flex-basis: 100%; margin: 0.2rem 0 0; }
+
+/* Summaries grid */
+#summaries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.channel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 0.8rem;
+  transition: border-color 0.2s;
+}
+
+.channel-card:hover { border-color: var(--accent); }
+
+.card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+
+.card-title { font-size: 1rem; font-weight: 600; }
+.card-username { font-size: 0.8rem; color: var(--muted); margin-top: 0.1rem; }
+
+.card-remove {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.card-remove:hover { color: var(--error); border-color: var(--error); background: transparent; }
+
+.card-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: flex; gap: 1rem;
+}
+
+.card-summary {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.card-summary.loading { color: var(--muted); font-style: italic; }
+
+/* Empty state */
+#empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--muted);
+}
+
+/* Spinner on refresh button */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning::after {
+  content: " ⟳";
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+.hidden { display: none !important; }
