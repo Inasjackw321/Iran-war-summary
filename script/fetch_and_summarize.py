@@ -128,6 +128,9 @@ Hezbollah operations, Israeli strikes, UNIFIL incidents, displacement, cross-bor
 SYRIA & IRAQ
 Militia activity, airstrikes, proxy operations, spillover effects, diplomatic developments.
 
+GULF STATES
+Saudi Arabia, UAE, Qatar, Kuwait, Bahrain, Oman — military posture, diplomacy, economic impact, stance on the conflict, US pressure, Strait of Hormuz implications.
+
 KEY DEVELOPMENTS
 Numbered list of the 6-9 most significant facts or events, with specifics (names, locations, numbers).
 

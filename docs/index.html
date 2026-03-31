@@ -446,6 +446,7 @@
     { key:"GAZA & WEST BANK",              flag:"🗺️",  color:"#8b949e" },
     { key:"LEBANON",                        flag:"🇱🇧", color:"#3fb950" },
     { key:"SYRIA & IRAQ",                  flag:"⚔️",  color:"#d29922" },
+    { key:"GULF STATES",                   flag:"🛢️",  color:"#e8b04b" },
     { key:"KEY DEVELOPMENTS",              flag:"🔑",  color:"#bc8cff" },
     { key:"THREAT ASSESSMENT",             flag:"⚠️",  color:"#f85149" },
     { key:"REGIONAL & INTERNATIONAL RESPONSE", flag:"🌍", color:"#ec4899" },
@@ -618,7 +619,11 @@
   }, 1000);
 
   function fmt(iso) {
-    return iso ? new Date(iso).toLocaleString(undefined, { dateStyle:'long', timeStyle:'short' }) : '—';
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const date = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric', timeZone:'UTC' });
+    const time = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', timeZone:'UTC' });
+    return `${date} ${time} UTC`;
   }
 
   function esc(s) {
