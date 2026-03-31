@@ -7,15 +7,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
   <style>
     :root {
-      --bg:      #090a0e;
-      --surface: #0f1117;
-      --card:    #13161f;
-      --border:  #1e2235;
-      --text:    #c9d1d9;
-      --muted:   #4b5563;
-      --dim:     #2d3347;
-      --red:     #ef4444;
-      --orange:  #f97316;
+      --bg:      #07080c;
+      --surface: #0e1018;
+      --card:    #111520;
+      --border:  #1c2030;
+      --text:    #cdd5de;
+      --sub:     #8b949e;
+      --muted:   #3d4455;
+      --red:     #f85149;
+      --orange:  #f0883e;
+      --blue:    #58a6ff;
+      --green:   #3fb950;
+      --yellow:  #d29922;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,520 +26,601 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: "Georgia", serif;
-      font-size: 15px;
-      line-height: 1.75;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
     }
 
-    /* ── Header ─────────────────────────────────────── */
+    a { color: inherit; }
+
+    /* ── Header ── */
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
+      padding: 0.9rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
     .hdr {
-      max-width: 900px;
+      max-width: 1100px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
 
-    .hdr-left h1 {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #f3f4f6;
+    .hdr-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f0f3f6;
       letter-spacing: -0.01em;
     }
 
-    .hdr-left h1 span { color: var(--red); }
+    .hdr-title span { color: var(--red); }
 
-    .hdr-left p {
-      font-family: -apple-system, sans-serif;
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
+    .hdr-sub {
+      font-size: 0.68rem;
+      color: var(--sub);
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       margin-top: 0.1rem;
     }
 
     .hdr-right {
-      font-family: -apple-system, sans-serif;
-      text-align: right;
       display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.75rem;
+      color: var(--sub);
+      flex-wrap: wrap;
     }
 
-    .live-badge {
+    .live {
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      font-size: 0.64rem;
       font-weight: 700;
       color: var(--red);
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      justify-content: flex-end;
+      letter-spacing: 0.08em;
     }
 
     .dot {
       width: 6px; height: 6px;
       background: var(--red);
       border-radius: 50%;
-      animation: pulse 1.4s infinite;
+      animation: pulse 1.6s infinite;
     }
 
     @keyframes pulse {
       0%,100% { opacity:1; transform:scale(1); }
-      50%      { opacity:0.3; transform:scale(1.6); }
-    }
-
-    #last-updated {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .timer {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.7rem;
-      color: var(--muted);
-      justify-content: flex-end;
+      50%      { opacity:0.3; transform:scale(1.7); }
     }
 
     #countdown {
-      font-family: "Courier New", monospace;
+      font-family: "SF Mono", "Fira Code", monospace;
       font-size: 0.85rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--orange);
-      background: #120a00;
-      border: 1px solid #7c2d1233;
-      padding: 0.1em 0.4em;
-      border-radius: 3px;
     }
 
-    /* ── Layout ─────────────────────────────────────── */
-    main {
-      max-width: 900px;
+    /* ── Columns layout ── */
+    .page {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 1.75rem 2rem 3rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    #loading, .empty {
-      text-align: center;
-      padding: 5rem 0;
-      font-family: -apple-system, sans-serif;
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.9;
-    }
-
-    #error-msg {
-      display: none;
-      font-family: -apple-system, sans-serif;
-      font-size: 0.83rem;
-      background: #1a0505;
-      border: 1px solid #7f1d1d;
-      color: #fca5a5;
-      border-radius: 6px;
-      padding: 0.9rem 1.1rem;
-    }
-
-    /* ── Stats ─────────────────────────────────────── */
-    .stats {
+      padding: 1.5rem;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: 1fr 300px;
+      grid-template-rows: auto;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .col-main { grid-column: 1; min-width: 0; }
+    .col-side { grid-column: 2; display: flex; flex-direction: column; gap: 1rem; }
+
+    @media (max-width: 860px) {
+      .page {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+      }
+      .col-side { grid-column: 1; grid-row: 2; }
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--sub);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-body { padding: 0.9rem 1rem; }
+
+    /* ── Stat blocks ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 0.75rem;
+      margin-bottom: 1rem;
     }
 
     .stat {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 1rem 1.1rem;
-      font-family: -apple-system, sans-serif;
+      padding: 0.85rem 1rem;
     }
 
-    .stat.alert { border-color: #7f1d1d44; background: #130505; }
+    .stat.danger { border-color: #6b1a1a; background: #0f0707; }
 
-    .stat-lbl {
+    .stat-label {
       font-size: 0.62rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
+      letter-spacing: 0.09em;
+      color: var(--sub);
       margin-bottom: 0.3rem;
     }
 
-    .stat-val {
-      font-size: 2rem;
+    .stat-value {
+      font-size: 2.2rem;
       font-weight: 800;
-      color: #f3f4f6;
+      color: #f0f3f6;
       line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
 
-    .stat.alert .stat-val { color: var(--red); }
+    .stat.danger .stat-value { color: var(--red); }
 
-    .stat-sub {
-      font-size: 0.67rem;
+    .stat-note {
+      font-size: 0.66rem;
       color: var(--muted);
       margin-top: 0.25rem;
     }
 
-    /* ── Charts ─────────────────────────────────────── */
-    .charts {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
+    /* ── Briefing sections ── */
+    .sections { display: flex; flex-direction: column; gap: 0.6rem; }
 
-    .chart-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.1rem;
-      font-family: -apple-system, sans-serif;
-    }
-
-    .chart-card.alert-card { border-color: #7f1d1d44; }
-
-    .chart-lbl {
-      font-size: 0.62rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      margin-bottom: 0.65rem;
-    }
-
-    @media (max-width: 580px) {
-      .charts { grid-template-columns: 1fr; }
-    }
-
-    /* ── Briefing ────────────────────────────────────── */
-    .briefing-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-    }
-
-    /* Each section is its own block */
     .sec {
       background: var(--card);
       border: 1px solid var(--border);
-      border-left: 3px solid var(--accent-color, var(--border));
+      border-left: 3px solid var(--c, var(--border));
       border-radius: 0 8px 8px 0;
-      padding: 1.25rem 1.5rem;
     }
 
-    .sec-hdr {
+    .sec-head {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
-      margin-bottom: 0.9rem;
-      padding-bottom: 0.65rem;
+      gap: 0.5rem;
+      padding: 0.65rem 1.1rem;
       border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
     }
 
-    .sec-icon {
-      font-size: 1rem;
-      line-height: 1;
-    }
+    .sec-head:hover { background: #ffffff06; }
 
-    .sec-title {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    .sec-flag { font-size: 1.05rem; line-height: 1; }
+
+    .sec-label {
+      flex: 1;
       font-size: 0.68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent-color, var(--muted));
-    }
-
-    .sec-body {
-      font-size: 0.95rem;
-      line-height: 1.8;
-      color: var(--text);
-    }
-
-    /* Markdown inside sections */
-    .sec-body p { margin-bottom: 0.6rem; }
-    .sec-body p:last-child { margin-bottom: 0; }
-
-    .sec-body ul, .sec-body ol {
-      padding-left: 1.5rem;
-      margin: 0.4rem 0 0.6rem;
-    }
-
-    .sec-body li { margin-bottom: 0.3rem; }
-    .sec-body li:last-child { margin-bottom: 0; }
-
-    .sec-body ul ul, .sec-body ol ul {
-      margin: 0.2rem 0;
-      padding-left: 1.2rem;
-    }
-
-    .sec-body strong { color: #e5e7eb; font-weight: 700; }
-    .sec-body em { color: #9ca3af; font-style: italic; }
-
-    .sec-body h3 {
-      font-family: -apple-system, sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin: 0.8rem 0 0.4rem;
-    }
-
-    /* ── Sources ─────────────────────────────────────── */
-    .sources {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      align-items: center;
-      font-family: -apple-system, sans-serif;
-    }
-
-    .src-lbl {
-      font-size: 0.62rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: var(--muted);
-      margin-right: 0.1rem;
+      color: var(--c, var(--sub));
     }
 
-    .src-chip {
-      font-size: 0.68rem;
-      color: #6b7280;
-      background: var(--card);
+    .sec-caret {
+      font-size: 0.7rem;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+
+    .sec.collapsed .sec-caret { transform: rotate(-90deg); }
+    .sec.collapsed .sec-content { display: none; }
+
+    .sec-content {
+      padding: 1.1rem 1.25rem;
+      font-size: 0.925rem;
+      line-height: 1.85;
+      color: var(--text);
+    }
+
+    /* Markdown styles */
+    .sec-content p { margin-bottom: 0.65rem; }
+    .sec-content p:last-child { margin-bottom: 0; }
+
+    .sec-content ul, .sec-content ol {
+      padding-left: 1.4rem;
+      margin: 0.3rem 0 0.65rem;
+    }
+
+    .sec-content li { margin-bottom: 0.35rem; }
+    .sec-content li:last-child { margin-bottom: 0; }
+
+    .sec-content ul ul { margin: 0.2rem 0; padding-left: 1.2rem; }
+
+    .sec-content strong { color: #e6edf3; font-weight: 600; }
+    .sec-content em     { color: var(--sub); font-style: italic; }
+
+    .sec-content h3 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--sub);
+      margin: 0.85rem 0 0.35rem;
+    }
+
+    /* ── Sidebar charts & info ── */
+    .chart-wrap { padding: 0.9rem 1rem; }
+    .chart-title {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--sub);
+      margin-bottom: 0.65rem;
+    }
+
+    /* ── Source chips ── */
+    .sources-wrap {
+      padding: 0.7rem 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .src {
+      font-size: 0.67rem;
+      color: var(--sub);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 3px;
       padding: 0.15em 0.5em;
       text-decoration: none;
-      transition: color 0.15s, border-color 0.15s;
     }
 
-    .src-chip:hover { color: #d1d5db; border-color: #374151; }
-    .src-chip .cnt { color: var(--dim); margin-left: 0.3em; }
+    .src:hover { color: #e6edf3; border-color: #3d4455; }
+    .src .n { color: var(--muted); margin-left: 0.3em; }
+
+    /* ── Table of contents ── */
+    .toc { padding: 0.75rem 1rem; }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.72rem;
+      color: var(--sub);
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .toc-item:last-child { border-bottom: none; }
+    .toc-item:hover { color: #e6edf3; }
+    .toc-icon { font-size: 0.85rem; }
+    .toc-label { flex: 1; }
+    .toc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--c, var(--muted)); flex-shrink: 0; }
+
+    /* ── State screens ── */
+    #loading, .empty {
+      text-align: center;
+      padding: 5rem 1rem;
+      color: var(--sub);
+      font-size: 0.9rem;
+      line-height: 1.9;
+    }
+
+    #err {
+      display: none;
+      font-size: 0.83rem;
+      background: #1a0505;
+      border: 1px solid #6b1a1a;
+      color: #f85149;
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="hdr">
-    <div class="hdr-left">
-      <h1>Iran War <span>Summary</span> (24 Hours)</h1>
-      <p>AI intelligence briefing · open-source Telegram monitoring</p>
+    <div>
+      <div class="hdr-title">Iran War <span>Summary</span> (24 Hours)</div>
+      <div class="hdr-sub">AI intelligence briefing · open-source Telegram</div>
     </div>
     <div class="hdr-right">
-      <div class="live-badge"><span class="dot"></span>Live</div>
+      <div class="live"><span class="dot"></span> Live</div>
       <span id="last-updated">—</span>
-      <div class="timer">Next update in <span id="countdown">--:--</span></div>
+      <span>Next update <strong id="countdown">--:--</strong></span>
     </div>
   </div>
 </header>
 
-<main>
-  <div id="error-msg"></div>
-  <div id="loading">Loading intelligence briefing…</div>
+<div id="loading">Loading intelligence briefing…</div>
+<div id="err"></div>
 
-  <div id="content" style="display:none">
+<div class="page" id="page" style="display:none">
 
-    <div class="stats">
-      <div class="stat alert">
-        <div class="stat-lbl">🚨 Red Alerts (Israel)</div>
-        <div class="stat-val" id="alert-total">—</div>
-        <div class="stat-sub">Last 24 h · @tzevaadom_en</div>
+  <!-- MAIN COLUMN -->
+  <div class="col-main">
+
+    <div class="stats-grid">
+      <div class="stat danger">
+        <div class="stat-label">🚨 Red Alerts (IL)</div>
+        <div class="stat-value" id="v-alerts">—</div>
+        <div class="stat-note">Last 24 h · @tzevaadom_en</div>
       </div>
       <div class="stat">
-        <div class="stat-lbl">Messages analysed</div>
-        <div class="stat-val" id="msg-total">—</div>
-        <div class="stat-sub" id="src-count">across all sources</div>
+        <div class="stat-label">Messages analysed</div>
+        <div class="stat-value" id="v-msgs">—</div>
+        <div class="stat-note" id="v-srcs">—</div>
       </div>
     </div>
 
-    <div class="charts">
-      <div class="chart-card alert-card">
-        <div class="chart-lbl">🚨 Red Alert Frequency — 24 h</div>
-        <canvas id="alert-chart"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-lbl">Combined Message Activity — 24 h</div>
-        <canvas id="activity-chart"></canvas>
-      </div>
-    </div>
-
-    <div class="briefing-wrap" id="briefing-wrap"></div>
-
-    <div class="sources">
-      <span class="src-lbl">Sources</span>
-      <div id="sources-list" style="display:contents"></div>
-    </div>
+    <div class="sections" id="sections"></div>
 
   </div>
 
-  <div class="empty" id="empty" style="display:none">
-    No briefing yet.<br>
-    GitHub repo → <strong>Actions</strong> → <strong>Summarize Channels</strong> → <strong>Run workflow</strong>
+  <!-- SIDEBAR -->
+  <div class="col-side">
+
+    <!-- TOC -->
+    <div class="card">
+      <div class="card-head">📑 Sections</div>
+      <div class="toc" id="toc"></div>
+    </div>
+
+    <!-- Red alert chart -->
+    <div class="card">
+      <div class="card-head">🚨 Red Alert Frequency — 24 h</div>
+      <div class="chart-wrap">
+        <canvas id="c-alerts"></canvas>
+      </div>
+    </div>
+
+    <!-- Activity chart -->
+    <div class="card">
+      <div class="card-head">📡 Combined Activity — 24 h</div>
+      <div class="chart-wrap">
+        <canvas id="c-activity"></canvas>
+      </div>
+    </div>
+
+    <!-- Sources chart -->
+    <div class="card">
+      <div class="card-head">📊 Messages by Channel</div>
+      <div class="chart-wrap">
+        <canvas id="c-sources"></canvas>
+      </div>
+    </div>
+
+    <!-- Source chips -->
+    <div class="card">
+      <div class="card-head">🔗 Sources</div>
+      <div class="sources-wrap" id="src-chips"></div>
+    </div>
+
   </div>
-</main>
+</div>
+
+<div class="empty" id="empty" style="display:none">
+  No briefing yet.<br>
+  GitHub repo → <strong>Actions</strong> → <strong>Summarize Channels</strong> → <strong>Run workflow</strong>
+</div>
 
 <script>
-  const REFRESH_MS = 30 * 60 * 1000;
-  let chartA = null, chartB = null;
-  let nextUpdate = null;
+  const REFRESH = 30 * 60 * 1000;
+  let charts = {};
+  let nextAt = null;
 
-  /* ── Section config ── */
-  const SECTIONS = [
-    { key: "EXECUTIVE SUMMARY",              icon: "📋", color: "#60a5fa" },
-    { key: "IRAN",                           icon: "🇮🇷", color: "#f97316" },
-    { key: "ISRAEL",                         icon: "🇮🇱", color: "#3b82f6" },
-    { key: "GAZA & WEST BANK",              icon: "🗺️",  color: "#94a3b8" },
-    { key: "LEBANON",                        icon: "🇱🇧", color: "#22c55e" },
-    { key: "SYRIA & IRAQ",                  icon: "⚔️",  color: "#eab308" },
-    { key: "KEY DEVELOPMENTS",              icon: "🔑",  color: "#a78bfa" },
-    { key: "THREAT ASSESSMENT",             icon: "⚠️",  color: "#ef4444" },
-    { key: "REGIONAL & INTERNATIONAL RESPONSE", icon: "🌍", color: "#ec4899" },
-    { key: "INTELLIGENCE NOTES",            icon: "🔍",  color: "#64748b" },
+  /* ── Section metadata ── */
+  const DEFS = [
+    { key:"EXECUTIVE SUMMARY",              flag:"📋", color:"#58a6ff" },
+    { key:"IRAN",                           flag:"🇮🇷", color:"#f0883e" },
+    { key:"ISRAEL",                         flag:"🇮🇱", color:"#58a6ff" },
+    { key:"GAZA & WEST BANK",              flag:"🗺️",  color:"#8b949e" },
+    { key:"LEBANON",                        flag:"🇱🇧", color:"#3fb950" },
+    { key:"SYRIA & IRAQ",                  flag:"⚔️",  color:"#d29922" },
+    { key:"KEY DEVELOPMENTS",              flag:"🔑",  color:"#bc8cff" },
+    { key:"THREAT ASSESSMENT",             flag:"⚠️",  color:"#f85149" },
+    { key:"REGIONAL & INTERNATIONAL RESPONSE", flag:"🌍", color:"#ec4899" },
+    { key:"INTELLIGENCE NOTES",            flag:"🔍",  color:"#6e7681" },
+    // also catch old "SITUATION REPORT" heading
+    { key:"SITUATION REPORT",              flag:"📋",  color:"#58a6ff" },
   ];
 
-  /* ── Parse briefing into sections ── */
-  function parseBriefing(text) {
-    const keys = SECTIONS.map(s => s.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    const re   = new RegExp(`(?:^|\\n)\\*{0,2}(${keys.join('|')})\\*{0,2}[ \\t]*(?=\\n|$)`, 'g');
+  const defByKey = {};
+  DEFS.forEach(d => defByKey[d.key] = d);
+
+  /* ── Parse briefing text into sections ── */
+  function parse(text) {
+    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const keys = DEFS.map(d => esc(d.key));
+    // Match lines that are JUST the header (with optional ** wrapping)
+    const re = new RegExp(`(?:^|\\n)\\*{0,3}(${keys.join('|')})\\*{0,3}\\s*(?=\\n|$)`, 'g');
 
     const parts = [];
     let last = 0, lastKey = null;
 
-    for (const m of text.matchAll(re)) {
+    for (const m of [...text.matchAll(re)]) {
       if (lastKey !== null) {
-        parts.push({ key: lastKey, content: text.slice(last, m.index).trim() });
-      } else if (m.index > 0) {
-        const pre = text.slice(0, m.index).trim();
-        if (pre) parts.push({ key: null, content: pre });
+        parts.push({ key: lastKey, body: text.slice(last, m.index).trim() });
+      } else {
+        const pre = text.slice(0, m.index).trim()
+          .replace(/^\*+INTELLIGENCE BRIEFING\*+.*\n?/,'')
+          .replace(/^Date:.*\n?/,'')
+          .trim();
+        if (pre) parts.push({ key: null, body: pre });
       }
       lastKey = m[1];
       last    = m.index + m[0].length;
     }
-    if (lastKey !== null) parts.push({ key: lastKey, content: text.slice(last).trim() });
+    if (lastKey !== null) parts.push({ key: lastKey, body: text.slice(last).trim() });
+    if (!parts.length)    parts.push({ key: null, body: text });
     return parts;
   }
 
-  /* ── Markdown → HTML ── */
-  function md(text) {
-    const lines = text.split('\n');
-    let html = '', ul = false, ol = false;
+  /* ── Markdown → safe HTML ── */
+  function md(raw) {
+    const lines = raw.split('\n');
+    let out = '', inUL = false, inOL = false;
 
-    const closeList = () => {
-      if (ul) { html += '</ul>'; ul = false; }
-      if (ol) { html += '</ol>'; ol = false; }
+    const closeL = () => {
+      if (inUL) { out += '</ul>'; inUL = false; }
+      if (inOL) { out += '</ol>'; inOL = false; }
     };
 
     const inline = s => s
-      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-      .replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g,         '<em>$1</em>');
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
 
     for (const raw of lines) {
       const t = raw.trim();
-      if (!t) { closeList(); continue; }
-
-      const olM = t.match(/^(\d+)\.\s+(.*)/);
-      const ulM = t.match(/^[*•\-]\s+(.*)/);
-
+      if (!t) { closeL(); continue; }
+      const olM = t.match(/^(\d+)[.)]\s+(.*)/s);
+      const ulM = t.match(/^[*•\-]\s+(.*)/s);
       if (olM) {
-        if (!ol) { closeList(); html += '<ol>'; ol = true; }
-        html += `<li>${inline(olM[2])}</li>`;
+        if (!inOL) { closeL(); out += '<ol>'; inOL = true; }
+        out += `<li>${inline(olM[2])}</li>`;
       } else if (ulM) {
-        if (!ul) { closeList(); html += '<ul>'; ul = true; }
-        html += `<li>${inline(ulM[1])}</li>`;
+        if (!inUL) { closeL(); out += '<ul>'; inUL = true; }
+        out += `<li>${inline(ulM[1])}</li>`;
       } else {
-        closeList();
+        closeL();
         if (/^#{1,3}\s/.test(t)) {
-          html += `<h3>${inline(t.replace(/^#+\s*/, ''))}</h3>`;
+          out += `<h3>${inline(t.replace(/^#+\s*/,''))}</h3>`;
         } else {
-          html += `<p>${inline(t)}</p>`;
+          out += `<p>${inline(t)}</p>`;
         }
       }
     }
-    closeList();
-    return html;
+    closeL();
+    return out;
   }
 
   /* ── Render briefing ── */
   function renderBriefing(text) {
-    const parts = parseBriefing(text);
-    if (!parts.length) {
-      return `<div class="sec" style="--accent-color:#64748b">
-        <div class="sec-body">${md(text)}</div>
-      </div>`;
-    }
+    const parts = parse(text);
+    const secEl = document.getElementById('sections');
+    const tocEl = document.getElementById('toc');
+    secEl.innerHTML = '';
+    tocEl.innerHTML = '';
 
-    return parts.map(p => {
-      const meta = SECTIONS.find(s => s.key === p.key) || { icon: '📄', color: '#64748b', key: p.key };
-      return `
-        <div class="sec" style="--accent-color:${meta.color}">
-          ${meta.key ? `
-          <div class="sec-hdr">
-            <span class="sec-icon">${meta.icon}</span>
-            <span class="sec-title" style="color:${meta.color}">${meta.key}</span>
-          </div>` : ''}
-          <div class="sec-body">${md(p.content)}</div>
-        </div>`;
-    }).join('');
+    parts.forEach((p, i) => {
+      const def = defByKey[p.key] || { flag: '📄', color: '#6e7681', key: p.key };
+      const id  = `sec-${i}`;
+
+      const div = document.createElement('div');
+      div.className = 'sec';
+      div.id = id;
+      div.style.setProperty('--c', def.color);
+      div.innerHTML = `
+        ${def.key ? `
+        <div class="sec-head" onclick="toggle('${id}')">
+          <span class="sec-flag">${def.flag}</span>
+          <span class="sec-label">${def.key}</span>
+          <span class="sec-caret">▾</span>
+        </div>` : ''}
+        <div class="sec-content">${md(p.body)}</div>`;
+      secEl.appendChild(div);
+
+      if (def.key) {
+        const a = document.createElement('a');
+        a.className = 'toc-item';
+        a.href = '#' + id;
+        a.style.setProperty('--c', def.color);
+        a.innerHTML = `
+          <span class="toc-icon">${def.flag}</span>
+          <span class="toc-label">${def.key}</span>
+          <span class="toc-dot"></span>`;
+        a.onclick = e => {
+          e.preventDefault();
+          document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' });
+          // Ensure section is open
+          document.getElementById(id)?.classList.remove('collapsed');
+        };
+        tocEl.appendChild(a);
+      }
+    });
   }
 
-  /* ── Charts ── */
-  function makeBar(id, labels, data, color, old) {
+  function toggle(id) {
+    document.getElementById(id)?.classList.toggle('collapsed');
+  }
+
+  /* ── Chart factory ── */
+  function bar(id, labels, data, color, horiz) {
     const el = document.getElementById(id);
-    if (!el) return null;
-    if (old) old.destroy();
-    return new Chart(el, {
+    if (!el) return;
+    if (charts[id]) { charts[id].destroy(); }
+    charts[id] = new Chart(el, {
       type: 'bar',
       data: {
         labels,
-        datasets: [{ data, backgroundColor: color + '33', borderColor: color, borderWidth: 1, borderRadius: 2 }]
+        datasets: [{
+          data,
+          backgroundColor: color + '44',
+          borderColor: color,
+          borderWidth: 1,
+          borderRadius: 2,
+        }]
       },
       options: {
+        indexAxis: horiz ? 'y' : 'x',
         responsive: true,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: i => i.raw + ' msgs' } }
+          tooltip: { callbacks: { label: i => i.raw + (id === 'c-sources' ? ' msgs' : '') } }
         },
         scales: {
-          x: { ticks: { color: '#374151', maxTicksLimit: 8, font: { size: 8 } }, grid: { color: '#0f1117' } },
-          y: { ticks: { color: '#374151', font: { size: 8 } }, grid: { color: '#0f1117' }, beginAtZero: true }
+          x: { ticks:{ color:'#3d4455', font:{size:8}, maxTicksLimit: horiz ? 5 : 8 }, grid:{color:'#0e1018'} },
+          y: { ticks:{ color:'#3d4455', font:{size:8} }, grid:{color:'#0e1018'}, beginAtZero:true }
         }
       }
     });
   }
 
   /* ── Countdown ── */
-  function setNext(iso) { nextUpdate = new Date(iso).getTime() + REFRESH_MS; }
-
+  function setNext(iso) { nextAt = new Date(iso).getTime() + REFRESH; }
   setInterval(() => {
     const el = document.getElementById('countdown');
-    if (!el || !nextUpdate) return;
-    const rem = Math.max(0, nextUpdate - Date.now());
-    const m = Math.floor(rem / 60000), s = Math.floor((rem % 60000) / 1000);
+    if (!el || !nextAt) return;
+    const r = Math.max(0, nextAt - Date.now());
+    const m = Math.floor(r / 60000), s = Math.floor((r % 60000) / 1000);
     el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }, 1000);
 
-  /* ── Helpers ── */
   function fmt(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' });
+    return iso ? new Date(iso).toLocaleString(undefined, { dateStyle:'long', timeStyle:'short' }) : '—';
   }
+
   function esc(s) {
     return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -555,38 +639,49 @@
         return;
       }
 
+      // Stats
       const ra = d.red_alerts || {};
-      document.getElementById('alert-total').textContent = (ra.total ?? 0).toLocaleString();
-      document.getElementById('msg-total').textContent   = (d.total_messages ?? 0).toLocaleString();
-      document.getElementById('src-count').textContent   = (d.sources?.length ?? 0) + ' channels monitored';
-      document.getElementById('last-updated').textContent = 'Updated ' + fmt(d.updated_at);
+      document.getElementById('v-alerts').textContent = (ra.total ?? 0).toLocaleString();
+      document.getElementById('v-msgs').textContent   = (d.total_messages ?? 0).toLocaleString();
+      document.getElementById('v-srcs').textContent   = (d.sources?.length ?? 0) + ' channels';
+      document.getElementById('last-updated').textContent = fmt(d.updated_at);
 
-      document.getElementById('briefing-wrap').innerHTML = renderBriefing(d.briefing);
+      // Briefing
+      renderBriefing(d.briefing);
 
-      chartA = makeBar('alert-chart',    d.hourly_labels, ra.hourly || [],       '#ef4444', chartA);
-      chartB = makeBar('activity-chart', d.hourly_labels, d.hourly_counts || [], '#60a5fa', chartB);
+      // Charts
+      bar('c-alerts',   d.hourly_labels, ra.hourly || [],       '#f85149', false);
+      bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
 
-      document.getElementById('sources-list').innerHTML =
+      // Sources chart — sorted by count desc
+      const srcs = [...(d.sources || [])].sort((a,b) => b.count - a.count);
+      bar('c-sources',
+        srcs.map(s => '@' + s.username),
+        srcs.map(s => s.count),
+        '#3fb950', true);
+
+      // Source chips
+      document.getElementById('src-chips').innerHTML =
         (d.sources || []).map(s =>
-          `<a class="src-chip" href="https://t.me/${esc(s.username)}" target="_blank" rel="noopener">
-            @${esc(s.username)}<span class="cnt">${s.count}</span>
+          `<a class="src" href="https://t.me/${esc(s.username)}" target="_blank" rel="noopener">
+            @${esc(s.username)}<span class="n">${s.count}</span>
           </a>`
         ).join('');
 
       setNext(d.updated_at);
-      document.getElementById('content').style.display = 'block';
-      document.getElementById('empty').style.display   = 'none';
+      document.getElementById('page').style.display  = 'grid';
+      document.getElementById('empty').style.display = 'none';
 
-    } catch (e) {
+    } catch(e) {
       document.getElementById('loading').style.display = 'none';
-      const el = document.getElementById('error-msg');
+      const el = document.getElementById('err');
       el.style.display = 'block';
       el.textContent = 'Could not load briefing: ' + e.message;
     }
   }
 
   load();
-  setInterval(load, REFRESH_MS);
+  setInterval(load, REFRESH);
 </script>
 
 </body>
