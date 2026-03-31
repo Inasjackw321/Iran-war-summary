@@ -95,6 +95,12 @@
     .card-handle {
       font-size: 0.75rem;
       color: #64748b;
+      text-decoration: none;
+    }
+
+    .card-handle:hover {
+      color: #a78bfa;
+      text-decoration: underline;
     }
 
     .card-meta {
@@ -164,7 +170,7 @@
           <span class="card-title">${esc(ch.display_name)}</span>
           <span class="badge ${err ? "badge-err" : "badge-ok"}">${err ? "error" : ch.message_count + " msgs"}</span>
         </div>
-        <div class="card-handle">@${esc(ch.username)}</div>
+        <a class="card-handle" href="https://t.me/${esc(ch.username)}" target="_blank" rel="noopener">@${esc(ch.username)} ↗</a>
         <div class="card-body">${esc(ch.summary)}</div>
         <div class="card-meta">Updated ${fmt(ch.updated_at)}</div>
       </div>`;
