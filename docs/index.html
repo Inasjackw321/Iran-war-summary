@@ -434,7 +434,7 @@
 </div>
 
 <script>
-  const REFRESH = 30 * 60 * 1000;
+  const REFRESH = 3 * 60 * 60 * 1000;
   let charts = {};
   let nextAt = null;
 
@@ -609,13 +609,21 @@
   }
 
   /* ── Countdown ── */
-  function setNext(iso) { nextAt = new Date(iso).getTime() + REFRESH; }
+  function setNext(iso) {
+    const base = new Date(iso).getTime();
+    const now  = Date.now();
+    let next   = base + REFRESH;
+    while (next < now) next += REFRESH;
+    nextAt = next;
+  }
   setInterval(() => {
     const el = document.getElementById('countdown');
     if (!el || !nextAt) return;
     const r = Math.max(0, nextAt - Date.now());
-    const m = Math.floor(r / 60000), s = Math.floor((r % 60000) / 1000);
-    el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const h = Math.floor(r / 3600000);
+    const m = Math.floor((r % 3600000) / 60000);
+    const s = Math.floor((r % 60000) / 1000);
+    el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }, 1000);
 
   function fmt(iso) {
