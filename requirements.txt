@@ -1,5 +1,4 @@
-flask>=3.0
 telethon>=1.36
 google-generativeai>=0.8
-apscheduler>=3.10
+psycopg2-binary>=2.9
 python-dotenv>=1.0

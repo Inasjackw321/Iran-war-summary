@@ -2,52 +2,21 @@
 // Boot
 // ---------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
-  const { authorized } = await get("/api/status");
-  if (authorized) {
-    showApp();
+  let authorized = false;
+  try {
+    const res = await get("/api/status");
+    authorized = res.authorized;
+  } catch (_) {}
+
+  if (!authorized) {
+    show("session-error");
   } else {
-    showAuthModal();
+    showApp();
   }
 
-  // Enter key in channel input
   document.getElementById("channel-input")
     .addEventListener("keydown", e => { if (e.key === "Enter") addChannel(); });
 });
-
-// ---------------------------------------------------------------------------
-// Auth flow
-// ---------------------------------------------------------------------------
-function showAuthModal() {
-  show("auth-modal");
-}
-
-async function sendCode() {
-  const phone = document.getElementById("auth-phone").value.trim();
-  setError("auth-phone-error", "");
-  const res = await post("/api/auth/send-code", { phone });
-  if (res.ok) {
-    hide("auth-step-phone");
-    show("auth-step-code");
-  } else {
-    setError("auth-phone-error", res.error || "Failed to send code.");
-  }
-}
-
-async function verifyCode() {
-  const code     = document.getElementById("auth-code").value.trim();
-  const password = document.getElementById("auth-password").value || null;
-  setError("auth-code-error", "");
-  const res = await post("/api/auth/verify", { code, password });
-  if (res.ok) {
-    hide("auth-modal");
-    showApp();
-  } else if (res.error && res.error.toLowerCase().includes("password")) {
-    show("auth-2fa-row");
-    setError("auth-code-error", "2FA password required — enter it above.");
-  } else {
-    setError("auth-code-error", res.error || "Verification failed.");
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Main app
@@ -117,7 +86,11 @@ async function addChannel() {
 
 async function removeChannel(id) {
   if (!confirm("Remove this channel and its summaries?")) return;
-  await del(`/api/channels/${id}`);
+  await fetch("/api/channels", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
   loadAll();
 }
 
@@ -153,12 +126,11 @@ function renderSummaries(summaries) {
     </div>
   `).join("");
 
-  // Update header timestamp
-  const times = summaries.filter(s => s.generated_at).map(s => new Date(s.generated_at + "Z"));
+  const times = summaries.filter(s => s.generated_at).map(s => new Date(s.generated_at));
   if (times.length) {
     const latest = new Date(Math.max(...times));
     document.getElementById("last-updated").textContent =
-      "Last updated " + relativeTime(latest.toISOString().replace("Z", ""));
+      "Last updated " + relativeTime(latest.toISOString());
   }
 
   window.scrollTo(0, scrollY);
@@ -199,10 +171,6 @@ async function post(url, body) {
   return r.json();
 }
 
-async function del(url) {
-  return fetch(url, { method: "DELETE" });
-}
-
 function show(id) { document.getElementById(id)?.classList.remove("hidden"); }
 function hide(id) { document.getElementById(id)?.classList.add("hidden"); }
 
@@ -214,14 +182,12 @@ function setError(id, msg) {
 function esc(str) {
   if (str == null) return "";
   return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function relativeTime(isoStr) {
-  const ms = Date.now() - new Date(isoStr.endsWith("Z") ? isoStr : isoStr + "Z").getTime();
+  const ms = Date.now() - new Date(isoStr).getTime();
   const s  = Math.floor(ms / 1000);
   if (s < 60)    return "just now";
   if (s < 3600)  return `${Math.floor(s / 60)}m ago`;

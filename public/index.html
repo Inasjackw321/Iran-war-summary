@@ -4,33 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iran Channel Summarizer</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
-  <!-- Auth Modal -->
-  <div id="auth-modal" class="modal hidden">
-    <div class="modal-box">
-      <h2>Telegram Login</h2>
-      <p>Authenticate with your Telegram account to start reading channels.</p>
-
-      <div id="auth-step-phone">
-        <label>Phone number (with country code)</label>
-        <input id="auth-phone" type="text" placeholder="+61..." />
-        <button onclick="sendCode()">Send Code</button>
-        <p id="auth-phone-error" class="error"></p>
-      </div>
-
-      <div id="auth-step-code" class="hidden">
-        <label>Verification code</label>
-        <input id="auth-code" type="text" placeholder="12345" />
-        <div id="auth-2fa-row" class="hidden">
-          <label>2FA Password</label>
-          <input id="auth-password" type="password" placeholder="Cloud password" />
-        </div>
-        <button onclick="verifyCode()">Verify</button>
-        <p id="auth-code-error" class="error"></p>
-      </div>
+  <!-- Session error banner (shown only if Telegram session is invalid) -->
+  <div id="session-error" class="hidden">
+    <div class="error-banner">
+      Telegram session invalid — re-run <code>python setup_auth.py</code> and update the
+      <strong>TELEGRAM_SESSION</strong> environment variable in Netlify.
     </div>
   </div>
 
@@ -75,6 +57,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

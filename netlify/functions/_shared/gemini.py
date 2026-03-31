@@ -9,7 +9,7 @@ def summarize(channel_name: str, messages: list[str]) -> str:
     if not messages:
         return "No messages in the last 24 hours."
 
-    combined = "\n\n".join(messages[:500])  # cap to avoid token limits
+    combined = "\n\n".join(messages[:500])
     prompt = f"""You are a news analyst. Below are messages from a Telegram channel called "{channel_name}" collected over the last 24 hours.
 
 Write a clear, concise summary in English covering:

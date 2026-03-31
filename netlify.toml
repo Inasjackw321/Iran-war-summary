@@ -1,0 +1,43 @@
+[build]
+  publish = "public"
+  command = "echo 'static site, no build step'"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[functions]
+  directory = "netlify/functions"
+
+[functions."scheduled"]
+  schedule = "*/30 * * * *"
+
+# Route /api/* to the matching Netlify function
+[[redirects]]
+  from = "/api/status"
+  to   = "/.netlify/functions/api-status"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from = "/api/channels"
+  to   = "/.netlify/functions/api-channels"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from = "/api/summaries"
+  to   = "/.netlify/functions/api-summaries"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from = "/api/refresh"
+  to   = "/.netlify/functions/api-refresh"
+  status = 200
+  force  = true
+
+# SPA fallback — serve index.html for all other paths
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
