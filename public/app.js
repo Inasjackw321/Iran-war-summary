@@ -30,18 +30,18 @@ function showApp() {
   let nextRefresh = Date.now() + THREE_HOURS_MS;
 
   setInterval(() => {
-    loadAll();
-    nextRefresh = Date.now() + THREE_HOURS_MS;
-  }, THREE_HOURS_MS);
-
-  setInterval(() => {
     const remaining = Math.max(0, nextRefresh - Date.now());
     const h = Math.floor(remaining / 3_600_000);
     const m = Math.floor((remaining % 3_600_000) / 60_000);
     const s = Math.floor((remaining % 60_000) / 1_000);
     const el = document.getElementById("next-refresh");
     if (el) el.textContent =
-      `Next refresh in ${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      `Next update ${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+
+    if (remaining === 0) {
+      triggerRefresh();
+      nextRefresh = Date.now() + THREE_HOURS_MS;
+    }
   }, 1_000);
 }
 

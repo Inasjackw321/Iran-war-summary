@@ -9,7 +9,7 @@
   directory = "netlify/functions"
 
 [functions."scheduled"]
-  schedule = "*/30 * * * *"
+  schedule = "0 */3 * * *"
 
 # Route /api/* to the matching Netlify function
 [[redirects]]
