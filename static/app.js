@@ -1,52 +1,53 @@
+"use strict";
+
 // ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
-  const { authorized } = await get("/api/status");
-  if (authorized) {
-    showApp();
-  } else {
-    showAuthModal();
-  }
+  const { authorized } = await api("GET", "/api/status");
+  authorized ? showApp() : showModal("auth-modal");
 
-  // Enter key in channel input
-  document.getElementById("channel-input")
-    .addEventListener("keydown", e => { if (e.key === "Enter") addChannel(); });
+  el("ch-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") addChannel();
+  });
 });
 
 // ---------------------------------------------------------------------------
-// Auth flow
+// Auth modal
 // ---------------------------------------------------------------------------
-function showAuthModal() {
-  show("auth-modal");
-}
-
 async function sendCode() {
-  const phone = document.getElementById("auth-phone").value.trim();
-  setError("auth-phone-error", "");
-  const res = await post("/api/auth/send-code", { phone });
+  const phone = el("auth-phone").value.trim();
+  setErr("err-phone", "");
+  if (!phone) return setErr("err-phone", "Enter your phone number.");
+  const res = await api("POST", "/api/auth/send-code", { phone });
   if (res.ok) {
-    hide("auth-step-phone");
-    show("auth-step-code");
+    hide("step-phone"); show("step-code");
   } else {
-    setError("auth-phone-error", res.error || "Failed to send code.");
+    setErr("err-phone", res.error || "Failed to send code.");
   }
 }
 
 async function verifyCode() {
-  const code     = document.getElementById("auth-code").value.trim();
-  const password = document.getElementById("auth-password").value || null;
-  setError("auth-code-error", "");
-  const res = await post("/api/auth/verify", { code, password });
+  const code     = el("auth-code").value.trim();
+  const password = el("auth-2fa").value || null;
+  setErr("err-code", "");
+  if (!code) return setErr("err-code", "Enter the code.");
+  const res = await api("POST", "/api/auth/verify", { code, password });
   if (res.ok) {
-    hide("auth-modal");
-    showApp();
-  } else if (res.error && res.error.toLowerCase().includes("password")) {
-    show("auth-2fa-row");
-    setError("auth-code-error", "2FA password required — enter it above.");
+    hide("auth-modal"); showApp();
+  } else if ((res.error || "").toLowerCase().includes("2fa") ||
+             (res.error || "").toLowerCase().includes("password")) {
+    show("step-2fa");
+    setErr("err-code", "2FA password required — enter it above.");
   } else {
-    setError("auth-code-error", res.error || "Verification failed.");
+    setErr("err-code", res.error || "Verification failed.");
   }
+}
+
+function resetAuth() {
+  hide("step-code"); show("step-phone");
+  setErr("err-phone", ""); setErr("err-code", "");
+  el("auth-code").value = ""; el("auth-2fa").value = "";
 }
 
 // ---------------------------------------------------------------------------
@@ -55,176 +56,139 @@ async function verifyCode() {
 function showApp() {
   show("app");
   loadAll();
-  setInterval(loadAll, 30_000);
+  setInterval(loadAll, 30_000);   // poll for new summaries every 30 s
 }
 
 async function loadAll() {
   const [channels, summaries] = await Promise.all([
-    get("/api/channels"),
-    get("/api/summaries"),
+    api("GET", "/api/channels"),
+    api("GET", "/api/summaries"),
   ]);
-  renderChannelList(channels);
-  renderSummaries(summaries);
+  renderSidebar(channels);
+  renderGrid(summaries);
 }
 
 // ---------------------------------------------------------------------------
-// Sidebar channel list
+// Sidebar
 // ---------------------------------------------------------------------------
-function renderChannelList(channels) {
-  const list  = document.getElementById("channel-list");
-  const empty = document.getElementById("channel-empty");
-
+function renderSidebar(channels) {
+  const list = el("ch-list");
   if (!channels.length) {
     list.innerHTML = "";
-    show("channel-empty");
+    show("ch-empty");
     return;
   }
-
-  hide("channel-empty");
+  hide("ch-empty");
   list.innerHTML = channels.map(ch => `
-    <li class="channel-item">
-      <div class="channel-item-name">
-        <span class="channel-item-title">${esc(ch.display_name || ch.username)}</span>
-        <span class="channel-item-user">@${esc(ch.username)}</span>
+    <li class="ch-item">
+      <div class="ch-item-text">
+        <div class="ch-name">${esc(ch.display_name || ch.username)}</div>
+        <div class="ch-user">@${esc(ch.username)}</div>
       </div>
-      <button class="btn-remove" onclick="removeChannel(${ch.id})" title="Remove">✕</button>
+      <button class="btn-del" onclick="removeChannel(${ch.id})" title="Remove">✕</button>
     </li>
   `).join("");
 }
 
 async function addChannel() {
-  const input = document.getElementById("channel-input");
-  const btn   = document.getElementById("add-btn");
+  const input   = el("ch-input");
+  const btn     = el("btn-add");
   const channel = input.value.trim();
-  setError("add-error", "");
+  setErr("err-add", "");
   if (!channel) return;
-
-  btn.disabled = true;
-  btn.textContent = "…";
-
-  const res = await post("/api/channels", { channel });
-
-  btn.disabled = false;
-  btn.textContent = "Add";
-
-  if (res.ok) {
-    input.value = "";
-    loadAll();
-  } else {
-    setError("add-error", res.error || "Could not add channel.");
-  }
+  btn.disabled = true; btn.textContent = "…";
+  const res = await api("POST", "/api/channels", { channel });
+  btn.disabled = false; btn.textContent = "Add";
+  if (res.ok) { input.value = ""; loadAll(); }
+  else setErr("err-add", res.error || "Could not add channel.");
 }
 
 async function removeChannel(id) {
-  if (!confirm("Remove this channel and its summaries?")) return;
-  await del(`/api/channels/${id}`);
+  if (!confirm("Remove this channel?")) return;
+  await api("DELETE", `/api/channels/${id}`);
   loadAll();
 }
 
 // ---------------------------------------------------------------------------
-// Summaries grid
+// Summary grid
 // ---------------------------------------------------------------------------
-function renderSummaries(summaries) {
-  const grid  = document.getElementById("summaries-grid");
-  const empty = document.getElementById("empty-state");
-
+function renderGrid(summaries) {
+  const grid = el("grid");
   if (!summaries.length) {
     grid.innerHTML = "";
-    show("empty-state");
+    show("main-empty");
     return;
   }
-
-  hide("empty-state");
+  hide("main-empty");
 
   const scrollY = window.scrollY;
   grid.innerHTML = summaries.map(ch => `
-    <div class="channel-card">
+    <div class="card">
       <div>
-        <div class="card-title">${esc(ch.display_name || ch.username)}</div>
-        <div class="card-username">@${esc(ch.username)}</div>
+        <div class="card-name">${esc(ch.display_name || ch.username)}</div>
+        <div class="card-user">@${esc(ch.username)}</div>
       </div>
       <div class="card-meta">
         <span>${ch.message_count != null ? ch.message_count + " messages" : "—"}</span>
-        <span>${ch.generated_at ? "Updated " + relativeTime(ch.generated_at) : "Not yet summarised"}</span>
+        <span>${ch.generated_at ? "Updated " + ago(ch.generated_at) : "Not summarised yet"}</span>
       </div>
-      <div class="card-summary ${ch.summary ? "" : "loading"}">
+      <div class="card-body${ch.summary ? "" : " pending"}">
         ${ch.summary ? esc(ch.summary) : "Awaiting first refresh…"}
       </div>
     </div>
   `).join("");
 
   // Update header timestamp
-  const times = summaries.filter(s => s.generated_at).map(s => new Date(s.generated_at + "Z"));
+  const times = summaries.filter(s => s.generated_at).map(s => +new Date(s.generated_at + "Z"));
   if (times.length) {
-    const latest = new Date(Math.max(...times));
-    document.getElementById("last-updated").textContent =
-      "Last updated " + relativeTime(latest.toISOString().replace("Z", ""));
+    el("last-updated").textContent = "Last updated " + ago(
+      new Date(Math.max(...times)).toISOString().replace("Z", "")
+    );
   }
-
   window.scrollTo(0, scrollY);
 }
 
 // ---------------------------------------------------------------------------
-// Manual refresh
+// Refresh button
 // ---------------------------------------------------------------------------
 async function triggerRefresh() {
-  const btn = document.getElementById("refresh-btn");
-  btn.disabled = true;
-  btn.classList.add("spinning");
-  btn.textContent = "Refreshing";
+  const btn = el("btn-refresh");
+  btn.disabled = true; btn.classList.add("spinning"); btn.textContent = "Refreshing";
   try {
-    await post("/api/refresh", {});
+    await api("POST", "/api/refresh");
     await loadAll();
   } finally {
-    btn.disabled = false;
-    btn.classList.remove("spinning");
-    btn.textContent = "Refresh Now";
+    btn.disabled = false; btn.classList.remove("spinning"); btn.textContent = "Refresh Now";
   }
 }
 
 // ---------------------------------------------------------------------------
-// Utilities
+// Helpers
 // ---------------------------------------------------------------------------
-async function get(url) {
-  const r = await fetch(url);
+async function api(method, url, body) {
+  const opts = { method, headers: {} };
+  if (body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+  const r = await fetch(url, opts);
   return r.json();
 }
 
-async function post(url, body) {
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  return r.json();
+const el  = id => document.getElementById(id);
+const show = id => el(id)?.classList.remove("hidden");
+const hide = id => el(id)?.classList.add("hidden");
+const showModal = id => { show(id); };
+
+function setErr(id, msg) { const e = el(id); if (e) e.textContent = msg; }
+
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-async function del(url) {
-  return fetch(url, { method: "DELETE" });
-}
-
-function show(id) { document.getElementById(id)?.classList.remove("hidden"); }
-function hide(id) { document.getElementById(id)?.classList.add("hidden"); }
-
-function setError(id, msg) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = msg;
-}
-
-function esc(str) {
-  if (str == null) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function relativeTime(isoStr) {
-  const ms = Date.now() - new Date(isoStr.endsWith("Z") ? isoStr : isoStr + "Z").getTime();
-  const s  = Math.floor(ms / 1000);
+function ago(iso) {
+  const s = Math.floor((Date.now() - new Date(iso.endsWith("Z") ? iso : iso + "Z")) / 1000);
   if (s < 60)    return "just now";
-  if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
+  if (s < 3600)  return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
 }

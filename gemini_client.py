@@ -9,19 +9,17 @@ def summarize(channel_name: str, messages: list[str]) -> str:
     if not messages:
         return "No messages in the last 24 hours."
 
-    combined = "\n\n".join(messages[:500])  # cap to avoid token limits
-    prompt = f"""You are a news analyst. Below are messages from a Telegram channel called "{channel_name}" collected over the last 24 hours.
+    prompt = f"""You are a news analyst. Below are messages from the Telegram channel "{channel_name}", collected over the last 24 hours.
 
-Write a clear, concise summary in English covering:
-- The main topics and events discussed
+Write a concise summary in English (under 300 words) covering:
+- Main topics and events discussed
 - Key facts, numbers, or names mentioned
-- Overall tone or sentiment of the channel
+- Overall tone of the channel
 
-Keep it under 300 words. Use bullet points where helpful.
+Use bullet points where helpful.
 
---- MESSAGES START ---
-{combined}
---- MESSAGES END ---"""
+--- MESSAGES ---
+{chr(10).join(messages[:500])}
+--- END ---"""
 
-    response = _model.generate_content(prompt)
-    return response.text
+    return _model.generate_content(prompt).text

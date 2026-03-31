@@ -1,23 +1,32 @@
-app = "iran-channel-summarizer"  # change to your unique app name
-primary_region = "syd"
+# ─────────────────────────────────────────────────────────────
+# Fly.io config for Channel Summarizer
+# Deploy: fly deploy
+# Secrets: fly secrets set KEY=value ...
+# ─────────────────────────────────────────────────────────────
+
+app            = "channel-summarizer"   # ← change to your unique app name
+primary_region = "syd"                  # Sydney (closest to AU +61 number)
 
 [build]
+  dockerfile = "Dockerfile"
 
+# DATA_DIR is baked into the Dockerfile; also set here for clarity
 [env]
   DATA_DIR = "/data"
 
+# Persistent volume — stores telegram.session + summaries.db across deploys
 [[mounts]]
-  source      = "summarizer_data"
+  source      = "app_data"
   destination = "/data"
 
 [http_service]
-  internal_port       = 5000
-  force_https         = true
-  auto_stop_machines  = false
-  auto_start_machines = true
+  internal_port        = 5000
+  force_https          = true
+  auto_stop_machines   = false   # keep running so the scheduler fires
+  auto_start_machines  = true
   min_machines_running = 1
 
 [[vm]]
-  memory   = "256mb"
   cpu_kind = "shared"
   cpus     = 1
+  memory   = "256mb"
