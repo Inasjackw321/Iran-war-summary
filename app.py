@@ -40,6 +40,12 @@ _scheduler.start()
 def index():
     return render_template("index.html")
 
+
+@app.get("/health")
+def health():
+    """Used by Render and UptimeRobot to keep the service alive."""
+    return "ok", 200
+
 # ---------------------------------------------------------------------------
 # Routes — auth
 # ---------------------------------------------------------------------------
@@ -76,7 +82,9 @@ def api_verify():
         return jsonify({"ok": False, "error": "Code required"}), 400
     try:
         tg.sign_in(phone, code, password=password)
-        return jsonify({"ok": True})
+        # Return the session string so the user can save it in Render env vars
+        # to avoid re-authenticating after every restart.
+        return jsonify({"ok": True, "session_string": tg.get_session_string()})
     except Exception as exc:
         return jsonify({"ok": False, "error": str(exc)}), 400
 

@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
   const { authorized } = await api("GET", "/api/status");
-  authorized ? showApp() : showModal("auth-modal");
+  authorized ? showApp() : show("auth-modal");
 
   el("ch-input").addEventListener("keydown", e => {
     if (e.key === "Enter") addChannel();
@@ -20,11 +20,8 @@ async function sendCode() {
   setErr("err-phone", "");
   if (!phone) return setErr("err-phone", "Enter your phone number.");
   const res = await api("POST", "/api/auth/send-code", { phone });
-  if (res.ok) {
-    hide("step-phone"); show("step-code");
-  } else {
-    setErr("err-phone", res.error || "Failed to send code.");
-  }
+  if (res.ok) { hide("step-phone"); show("step-code"); }
+  else setErr("err-phone", res.error || "Failed to send code.");
 }
 
 async function verifyCode() {
@@ -34,9 +31,10 @@ async function verifyCode() {
   if (!code) return setErr("err-code", "Enter the code.");
   const res = await api("POST", "/api/auth/verify", { code, password });
   if (res.ok) {
-    hide("auth-modal"); showApp();
-  } else if ((res.error || "").toLowerCase().includes("2fa") ||
-             (res.error || "").toLowerCase().includes("password")) {
+    hide("auth-modal");
+    if (res.session_string) showSessionBanner(res.session_string);
+    showApp();
+  } else if ((res.error || "").toLowerCase().includes("password")) {
     show("step-2fa");
     setErr("err-code", "2FA password required — enter it above.");
   } else {
@@ -51,12 +49,30 @@ function resetAuth() {
 }
 
 // ---------------------------------------------------------------------------
+// Session banner (shown after first login on Render)
+// ---------------------------------------------------------------------------
+function showSessionBanner(sessionStr) {
+  el("session-string-val").value = sessionStr;
+  show("session-banner");
+}
+
+function copySession() {
+  el("session-string-val").select();
+  document.execCommand("copy");
+  el("session-banner").querySelector("button").textContent = "Copied!";
+}
+
+function dismissSession() {
+  hide("session-banner");
+}
+
+// ---------------------------------------------------------------------------
 // Main app
 // ---------------------------------------------------------------------------
 function showApp() {
   show("app");
   loadAll();
-  setInterval(loadAll, 30_000);   // poll for new summaries every 30 s
+  setInterval(loadAll, 30_000);
 }
 
 async function loadAll() {
@@ -73,11 +89,7 @@ async function loadAll() {
 // ---------------------------------------------------------------------------
 function renderSidebar(channels) {
   const list = el("ch-list");
-  if (!channels.length) {
-    list.innerHTML = "";
-    show("ch-empty");
-    return;
-  }
+  if (!channels.length) { list.innerHTML = ""; show("ch-empty"); return; }
   hide("ch-empty");
   list.innerHTML = channels.map(ch => `
     <li class="ch-item">
@@ -91,8 +103,7 @@ function renderSidebar(channels) {
 }
 
 async function addChannel() {
-  const input   = el("ch-input");
-  const btn     = el("btn-add");
+  const input = el("ch-input"), btn = el("btn-add");
   const channel = input.value.trim();
   setErr("err-add", "");
   if (!channel) return;
@@ -114,11 +125,7 @@ async function removeChannel(id) {
 // ---------------------------------------------------------------------------
 function renderGrid(summaries) {
   const grid = el("grid");
-  if (!summaries.length) {
-    grid.innerHTML = "";
-    show("main-empty");
-    return;
-  }
+  if (!summaries.length) { grid.innerHTML = ""; show("main-empty"); return; }
   hide("main-empty");
 
   const scrollY = window.scrollY;
@@ -138,13 +145,11 @@ function renderGrid(summaries) {
     </div>
   `).join("");
 
-  // Update header timestamp
   const times = summaries.filter(s => s.generated_at).map(s => +new Date(s.generated_at + "Z"));
-  if (times.length) {
+  if (times.length)
     el("last-updated").textContent = "Last updated " + ago(
       new Date(Math.max(...times)).toISOString().replace("Z", "")
     );
-  }
   window.scrollTo(0, scrollY);
 }
 
@@ -154,12 +159,8 @@ function renderGrid(summaries) {
 async function triggerRefresh() {
   const btn = el("btn-refresh");
   btn.disabled = true; btn.classList.add("spinning"); btn.textContent = "Refreshing";
-  try {
-    await api("POST", "/api/refresh");
-    await loadAll();
-  } finally {
-    btn.disabled = false; btn.classList.remove("spinning"); btn.textContent = "Refresh Now";
-  }
+  try { await api("POST", "/api/refresh"); await loadAll(); }
+  finally { btn.disabled = false; btn.classList.remove("spinning"); btn.textContent = "Refresh Now"; }
 }
 
 // ---------------------------------------------------------------------------
@@ -168,14 +169,12 @@ async function triggerRefresh() {
 async function api(method, url, body) {
   const opts = { method, headers: {} };
   if (body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
-  const r = await fetch(url, opts);
-  return r.json();
+  return (await fetch(url, opts)).json();
 }
 
-const el  = id => document.getElementById(id);
+const el   = id => document.getElementById(id);
 const show = id => el(id)?.classList.remove("hidden");
 const hide = id => el(id)?.classList.add("hidden");
-const showModal = id => { show(id); };
 
 function setErr(id, msg) { const e = el(id); if (e) e.textContent = msg; }
 

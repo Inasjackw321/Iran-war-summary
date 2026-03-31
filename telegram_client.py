@@ -1,9 +1,11 @@
 """
 Telethon wrapper for Flask.
 
-Telethon is async; Flask is sync. This module runs a dedicated asyncio event
-loop on a background thread and exposes a simple synchronous API to the rest
-of the app via run_coroutine_threadsafe().
+Session persistence strategy:
+  - If TELEGRAM_SESSION env var is set, use StringSession (survives restarts).
+  - Otherwise fall back to a file-based session (works locally / Fly.io).
+After signing in, call get_session_string() to get the serialised string
+and save it as TELEGRAM_SESSION in your host's env vars.
 """
 
 import asyncio
@@ -14,16 +16,19 @@ from datetime import datetime, timedelta, timezone
 
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
+from telethon.sessions import StringSession
 
 # ---------------------------------------------------------------------------
-# Config — read from environment
+# Config
 # ---------------------------------------------------------------------------
 
-_DATA_DIR   = os.environ.get("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+_DATA_DIR    = os.environ.get("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+_SESSION_STR = os.environ.get("TELEGRAM_SESSION", "").strip()
 SESSION_FILE = os.path.join(_DATA_DIR, "telegram.session")
-API_ID      = int(os.environ["TELEGRAM_API_ID"])
-API_HASH    = os.environ["TELEGRAM_API_HASH"]
-PHONE       = os.environ.get("TELEGRAM_PHONE", "")
+
+API_ID   = int(os.environ["TELEGRAM_API_ID"])
+API_HASH = os.environ["TELEGRAM_API_HASH"]
+PHONE    = os.environ.get("TELEGRAM_PHONE", "")
 
 # ---------------------------------------------------------------------------
 # Background event loop + client
@@ -34,27 +39,32 @@ _client: TelegramClient | None           = None
 _phone_code_hash: str | None             = None
 
 
+def _make_session():
+    """Use StringSession if env var is set, otherwise file-based session."""
+    if _SESSION_STR:
+        return StringSession(_SESSION_STR)
+    return SESSION_FILE
+
+
 def _run_loop():
     global _loop, _client
     _loop   = asyncio.new_event_loop()
     asyncio.set_event_loop(_loop)
-    _client = TelegramClient(SESSION_FILE, API_ID, API_HASH)
+    _client = TelegramClient(_make_session(), API_ID, API_HASH)
     _loop.run_until_complete(_client.connect())
     _loop.run_forever()
 
 
 def start():
-    """Start the background Telegram event loop. Call once at app startup."""
     t = threading.Thread(target=_run_loop, daemon=True, name="telegram-loop")
     t.start()
-    for _ in range(100):          # wait up to 10 s for loop to be ready
+    for _ in range(100):
         if _loop is not None:
             break
         time.sleep(0.1)
 
 
 def _run(coro, timeout: int = 60):
-    """Submit a coroutine to the background loop and block until done."""
     if _loop is None:
         raise RuntimeError("Telegram client not started")
     return asyncio.run_coroutine_threadsafe(coro, _loop).result(timeout=timeout)
@@ -82,12 +92,18 @@ def sign_in(phone: str, code: str, password: str | None = None) -> None:
             raise ValueError("2FA password required")
         _run(_client.sign_in(password=password))
 
+
+def get_session_string() -> str:
+    """Return the serialised session string — save this as TELEGRAM_SESSION."""
+    if _client is None:
+        return ""
+    return _client.session.save()
+
 # ---------------------------------------------------------------------------
 # Channel helpers
 # ---------------------------------------------------------------------------
 
 def _normalise(identifier: str) -> str:
-    """Turn a t.me link or bare name into @username."""
     s = identifier.strip()
     if s.startswith("https://t.me/") or s.startswith("t.me/"):
         s = s.split("t.me/")[-1].split("/")[0]
@@ -95,7 +111,6 @@ def _normalise(identifier: str) -> str:
 
 
 def resolve_channel(identifier: str) -> dict:
-    """Return {username, display_name} for a channel identifier."""
     tag = _normalise(identifier)
 
     async def _resolve():
@@ -109,7 +124,6 @@ def resolve_channel(identifier: str) -> dict:
 
 
 def fetch_channel_messages(username: str, hours: int = 24) -> list[str]:
-    """Return text messages posted in the last `hours` hours."""
     tag   = _normalise(username)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 

@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- Auth modal — shown only on first launch before Telegram login -->
+  <!-- Auth modal -->
   <div id="auth-modal" class="modal hidden">
     <div class="modal-box">
       <h2>Connect Telegram</h2>
@@ -35,6 +35,25 @@
     </div>
   </div>
 
+  <!-- Session string banner — shown once after first login -->
+  <div id="session-banner" class="session-banner hidden">
+    <div class="session-banner-inner">
+      <strong>⚠ Save your session string</strong>
+      <p>Render doesn't have persistent storage. Copy the string below and add it as
+        <code>TELEGRAM_SESSION</code> in your Render environment variables — then you
+        won't need to log in again after restarts.</p>
+      <div class="session-copy-row">
+        <input id="session-string-val" type="text" readonly onclick="this.select()" />
+        <button onclick="copySession()">Copy</button>
+      </div>
+      <p class="session-steps">
+        Render dashboard → your service → <strong>Environment</strong> → Add
+        <code>TELEGRAM_SESSION</code> = (paste here) → Save → Redeploy
+      </p>
+      <button class="btn-secondary" onclick="dismissSession()">Dismiss</button>
+    </div>
+  </div>
+
   <!-- Main dashboard -->
   <div id="app" class="hidden">
     <header>
@@ -49,13 +68,11 @@
 
       <aside class="sidebar">
         <p class="sidebar-label">Channels</p>
-
         <div class="add-row">
           <input id="ch-input" type="text" placeholder="@channel or t.me/…" />
           <button id="btn-add" onclick="addChannel()">Add</button>
         </div>
         <p id="err-add" class="error"></p>
-
         <ul id="ch-list"></ul>
         <p id="ch-empty" class="muted hidden">No channels yet.</p>
       </aside>

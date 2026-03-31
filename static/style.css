@@ -179,6 +179,24 @@ main {
 }
 .card-body.pending { color: var(--muted); font-style: italic; }
 
+/* ── Session banner ──────────────────────────────────────── */
+.session-banner {
+  background: #1a2a1a; border-bottom: 1px solid #4fc58e;
+  padding: 1rem 1.4rem;
+}
+.session-banner-inner { max-width: 700px; display: flex; flex-direction: column; gap: .6rem; }
+.session-banner strong { color: #4fc58e; font-size: .95rem; }
+.session-banner p { font-size: .82rem; color: var(--muted); }
+.session-banner code { background: #0f2010; padding: .1rem .3rem; border-radius: 3px; color: #4fc58e; }
+.session-copy-row { display: flex; gap: .5rem; }
+.session-copy-row input {
+  flex: 1; font-family: monospace; font-size: .78rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); padding: .4rem .6rem; cursor: text;
+}
+.session-copy-row button { margin: 0; flex-shrink: 0; }
+.session-steps { font-size: .78rem !important; }
+
 /* ── Center message ──────────────────────────────────────── */
 .center-msg {
   text-align: center; padding: 4rem 2rem; color: var(--muted);
