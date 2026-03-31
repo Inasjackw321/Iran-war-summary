@@ -15,7 +15,7 @@
       <p>Authenticate with your Telegram account to start reading channels.</p>
 
       <div id="auth-step-phone">
-        <label>Phone number</label>
+        <label>Phone number (with country code)</label>
         <input id="auth-phone" type="text" placeholder="+61..." />
         <button onclick="sendCode()">Send Code</button>
         <p id="auth-phone-error" class="error"></p>
@@ -43,24 +43,35 @@
       </div>
       <div class="header-right">
         <button id="refresh-btn" onclick="triggerRefresh()">Refresh Now</button>
-        <button onclick="toggleAddChannel()">+ Add Channel</button>
       </div>
     </header>
 
-    <!-- Add channel panel -->
-    <div id="add-channel-panel" class="hidden">
-      <div class="add-channel-row">
-        <input id="channel-input" type="text" placeholder="@channelname or t.me/channel" />
-        <button onclick="addChannel()">Add</button>
-        <span id="add-error" class="error"></span>
-      </div>
-    </div>
+    <div class="layout">
 
-    <!-- Summaries grid -->
-    <div id="summaries-grid"></div>
+      <!-- Sidebar: Channel Management -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>Channels</h2>
+        </div>
 
-    <div id="empty-state" class="hidden">
-      <p>No channels added yet. Click <strong>+ Add Channel</strong> to get started.</p>
+        <div class="add-channel-row">
+          <input id="channel-input" type="text" placeholder="@channel or t.me/..." />
+          <button id="add-btn" onclick="addChannel()">Add</button>
+          <span id="add-error" class="error"></span>
+        </div>
+
+        <ul id="channel-list" class="channel-list"></ul>
+        <p id="channel-empty" class="muted sidebar-empty hidden">No channels yet.</p>
+      </aside>
+
+      <!-- Main: Summaries -->
+      <main>
+        <div id="summaries-grid"></div>
+        <div id="empty-state" class="hidden">
+          <p>Add a channel on the left to get started.</p>
+        </div>
+      </main>
+
     </div>
   </div>
 

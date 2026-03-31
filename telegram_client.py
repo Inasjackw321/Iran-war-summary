@@ -12,7 +12,8 @@ from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.types import Channel, Chat
 
-SESSION_FILE = os.path.join(os.path.dirname(__file__), "telegram.session")
+_DATA_DIR = os.environ.get("DATA_DIR", os.path.dirname(__file__))
+SESSION_FILE = os.path.join(_DATA_DIR, "telegram.session")
 API_ID = int(os.environ["TELEGRAM_API_ID"])
 API_HASH = os.environ["TELEGRAM_API_HASH"]
 PHONE = os.environ["TELEGRAM_PHONE"]

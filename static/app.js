@@ -1,9 +1,4 @@
 // ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-let pollTimer = null;
-
-// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
@@ -13,6 +8,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     showAuthModal();
   }
+
+  // Enter key in channel input
+  document.getElementById("channel-input")
+    .addEventListener("keydown", e => { if (e.key === "Enter") addChannel(); });
 });
 
 // ---------------------------------------------------------------------------
@@ -20,9 +19,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ---------------------------------------------------------------------------
 function showAuthModal() {
   show("auth-modal");
-  // Pre-fill phone from a meta tag if present (we won't expose the real number)
-  const phoneInput = document.getElementById("auth-phone");
-  if (phoneInput && !phoneInput.value) phoneInput.value = "";
 }
 
 async function sendCode() {
@@ -46,7 +42,6 @@ async function verifyCode() {
     hide("auth-modal");
     showApp();
   } else if (res.error && res.error.toLowerCase().includes("password")) {
-    // 2FA needed
     show("auth-2fa-row");
     setError("auth-code-error", "2FA password required — enter it above.");
   } else {
@@ -59,16 +54,76 @@ async function verifyCode() {
 // ---------------------------------------------------------------------------
 function showApp() {
   show("app");
-  loadSummaries();
-  // Auto-poll every 30 seconds to pick up background refresh results
-  pollTimer = setInterval(loadSummaries, 30_000);
+  loadAll();
+  setInterval(loadAll, 30_000);
 }
 
-async function loadSummaries() {
-  const summaries = await get("/api/summaries");
+async function loadAll() {
+  const [channels, summaries] = await Promise.all([
+    get("/api/channels"),
+    get("/api/summaries"),
+  ]);
+  renderChannelList(channels);
   renderSummaries(summaries);
 }
 
+// ---------------------------------------------------------------------------
+// Sidebar channel list
+// ---------------------------------------------------------------------------
+function renderChannelList(channels) {
+  const list  = document.getElementById("channel-list");
+  const empty = document.getElementById("channel-empty");
+
+  if (!channels.length) {
+    list.innerHTML = "";
+    show("channel-empty");
+    return;
+  }
+
+  hide("channel-empty");
+  list.innerHTML = channels.map(ch => `
+    <li class="channel-item">
+      <div class="channel-item-name">
+        <span class="channel-item-title">${esc(ch.display_name || ch.username)}</span>
+        <span class="channel-item-user">@${esc(ch.username)}</span>
+      </div>
+      <button class="btn-remove" onclick="removeChannel(${ch.id})" title="Remove">✕</button>
+    </li>
+  `).join("");
+}
+
+async function addChannel() {
+  const input = document.getElementById("channel-input");
+  const btn   = document.getElementById("add-btn");
+  const channel = input.value.trim();
+  setError("add-error", "");
+  if (!channel) return;
+
+  btn.disabled = true;
+  btn.textContent = "…";
+
+  const res = await post("/api/channels", { channel });
+
+  btn.disabled = false;
+  btn.textContent = "Add";
+
+  if (res.ok) {
+    input.value = "";
+    loadAll();
+  } else {
+    setError("add-error", res.error || "Could not add channel.");
+  }
+}
+
+async function removeChannel(id) {
+  if (!confirm("Remove this channel and its summaries?")) return;
+  await del(`/api/channels/${id}`);
+  loadAll();
+}
+
+// ---------------------------------------------------------------------------
+// Summaries grid
+// ---------------------------------------------------------------------------
 function renderSummaries(summaries) {
   const grid  = document.getElementById("summaries-grid");
   const empty = document.getElementById("empty-state");
@@ -81,17 +136,12 @@ function renderSummaries(summaries) {
 
   hide("empty-state");
 
-  // Preserve scroll position
   const scrollY = window.scrollY;
-
   grid.innerHTML = summaries.map(ch => `
-    <div class="channel-card" id="card-${ch.id}">
-      <div class="card-header">
-        <div>
-          <div class="card-title">${esc(ch.display_name || ch.username)}</div>
-          <div class="card-username">@${esc(ch.username)}</div>
-        </div>
-        <button class="card-remove" onclick="removeChannel(${ch.id})">Remove</button>
+    <div class="channel-card">
+      <div>
+        <div class="card-title">${esc(ch.display_name || ch.username)}</div>
+        <div class="card-username">@${esc(ch.username)}</div>
       </div>
       <div class="card-meta">
         <span>${ch.message_count != null ? ch.message_count + " messages" : "—"}</span>
@@ -103,7 +153,7 @@ function renderSummaries(summaries) {
     </div>
   `).join("");
 
-  // Update last-updated label
+  // Update header timestamp
   const times = summaries.filter(s => s.generated_at).map(s => new Date(s.generated_at + "Z"));
   if (times.length) {
     const latest = new Date(Math.max(...times));
@@ -112,45 +162,6 @@ function renderSummaries(summaries) {
   }
 
   window.scrollTo(0, scrollY);
-}
-
-// ---------------------------------------------------------------------------
-// Channel management
-// ---------------------------------------------------------------------------
-function toggleAddChannel() {
-  const panel = document.getElementById("add-channel-panel");
-  panel.classList.toggle("hidden");
-  if (!panel.classList.contains("hidden")) {
-    document.getElementById("channel-input").focus();
-  }
-}
-
-async function addChannel() {
-  const input = document.getElementById("channel-input");
-  const channel = input.value.trim();
-  setError("add-error", "");
-  if (!channel) return;
-
-  const res = await post("/api/channels", { channel });
-  if (res.ok) {
-    input.value = "";
-    hide("add-channel-panel");
-    loadSummaries();
-  } else {
-    setError("add-error", res.error || "Could not add channel.");
-  }
-}
-
-// Allow Enter key in channel input
-document.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("channel-input");
-  if (input) input.addEventListener("keydown", e => { if (e.key === "Enter") addChannel(); });
-});
-
-async function removeChannel(id) {
-  if (!confirm("Remove this channel and its summaries?")) return;
-  await del(`/api/channels/${id}`);
-  loadSummaries();
 }
 
 // ---------------------------------------------------------------------------
@@ -163,7 +174,7 @@ async function triggerRefresh() {
   btn.textContent = "Refreshing";
   try {
     await post("/api/refresh", {});
-    await loadSummaries();
+    await loadAll();
   } finally {
     btn.disabled = false;
     btn.classList.remove("spinning");
@@ -210,10 +221,10 @@ function esc(str) {
 }
 
 function relativeTime(isoStr) {
-  const ms = Date.now() - new Date(isoStr + (isoStr.endsWith("Z") ? "" : "Z")).getTime();
+  const ms = Date.now() - new Date(isoStr.endsWith("Z") ? isoStr : isoStr + "Z").getTime();
   const s  = Math.floor(ms / 1000);
-  if (s < 60)  return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 60)    return "just now";
+  if (s < 3600)  return `${Math.floor(s / 60)}m ago`;
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
   return `${Math.floor(s / 86400)}d ago`;
 }
