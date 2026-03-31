@@ -2,6 +2,15 @@
 # Paste the t.me link directly, or use the @handle. Both work.
 #
 # Format examples (remove the # to activate):
-# https://t.me/bbcpersian
-# https://t.me/iranintl
-# https://t.me/VOAIran
+# t.me/N12chat
+# t.me/manniefabian
+# t.me/asafroz
+# t.me/yediotnews25
+# t.me/SharghDaily
+# t.me/amitsegal
+# t.me/presstv
+# tt.me/mamlekate
+# t.me/kianmeli1
+# t.me/Faytuks_Network
+# t.me/rodast_omiddana
+# t.me/naya_foriraq
