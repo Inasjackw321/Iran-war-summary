@@ -2,7 +2,7 @@ name: Summarize Channels
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "*/30 * * * *"  # every 30 minutes
   workflow_dispatch:       # lets you run it manually from GitHub
 
 permissions:

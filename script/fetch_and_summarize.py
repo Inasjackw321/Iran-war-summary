@@ -7,6 +7,7 @@ result to docs/summaries.json — which GitHub Pages serves to the world.
 import asyncio
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -46,38 +47,83 @@ def load_channels():
 # Summarise one channel
 # ---------------------------------------------------------------------------
 async def summarise_channel(client, identifier: str) -> dict:
-    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(hours=24)
+
     try:
         entity       = await client.get_entity(identifier)
         display_name = getattr(entity, "title",    identifier.lstrip("@"))
         username     = getattr(entity, "username", identifier.lstrip("@")) or identifier.lstrip("@")
 
-        texts = []
+        texts      = []
+        timestamps = []
         async for msg in client.iter_messages(entity, limit=500):
             if msg.date < since:
                 break
             if msg.text and msg.text.strip():
                 texts.append(msg.text.strip())
+                timestamps.append(msg.date)
+
+        # Build 24-bucket hourly activity (index 0 = oldest hour, 23 = most recent)
+        hourly_counts = [0] * 24
+        hourly_labels = [
+            (now - timedelta(hours=23 - i)).strftime("%H:00")
+            for i in range(24)
+        ]
+        for ts in timestamps:
+            h = int((now - ts).total_seconds() / 3600)
+            if 0 <= h < 24:
+                hourly_counts[23 - h] += 1
 
         if texts:
             prompt = (
-                f'You are a news analyst. Summarise the messages below from the Telegram channel '
-                f'"{display_name}" (last 24 hours) in clear English.\n'
-                f'Cover the main topics, key facts, and overall tone. '
-                f'Use bullet points. Keep it under 300 words.\n\n'
-                + "\n\n".join(texts[:400])
+                f'You are a senior news analyst. Analyse these {len(texts)} messages from the Telegram channel '
+                f'"{display_name}" covering the last 24 hours.\n\n'
+                f'Return ONLY a valid JSON object — no markdown fences, no extra text — in exactly this structure:\n'
+                f'{{"summary":"<detailed 400-500 word analysis. Use numbered sections:\\n'
+                f'1. Main Events\\n2. Key Figures\\n3. Important Developments\\n'
+                f'4. Context & Implications\\n5. Overall Narrative\\n'
+                f'Be specific: include names, dates, numbers from the messages.>","topics":[{{"label":"<topic name>","score":<integer>}}],'
+                f'"tone":"<positive|negative|neutral|mixed>"}}\n\n'
+                f'Rules:\n'
+                f'- topics: 3 to 6 items, scores are integers that sum to exactly 100\n'
+                f'- summary: write in clear English paragraphs under each numbered heading\n\n'
+                f'Messages:\n'
+                + "\n---\n".join(texts[:400])
             )
-            summary = model.generate_content(prompt).text
+
+            raw = model.generate_content(prompt).text.strip()
+            raw = re.sub(r'^```(?:json)?\s*', '', raw)
+            raw = re.sub(r'\s*```$', '', raw.strip())
+
+            try:
+                parsed = json.loads(raw)
+                summary = parsed.get("summary", raw)
+                topics  = [
+                    t for t in parsed.get("topics", [])
+                    if isinstance(t, dict) and "label" in t and "score" in t
+                ]
+                tone = parsed.get("tone", "neutral")
+            except (json.JSONDecodeError, AttributeError):
+                summary = raw
+                topics  = []
+                tone    = "neutral"
         else:
             summary = "No messages in the last 24 hours."
+            topics  = []
+            tone    = "neutral"
 
         return {
             "username":      username,
             "display_name":  display_name,
             "summary":       summary,
             "message_count": len(texts),
-            "updated_at":    datetime.now(timezone.utc).isoformat(),
+            "updated_at":    now.isoformat(),
             "error":         False,
+            "hourly_counts": hourly_counts,
+            "hourly_labels": hourly_labels,
+            "topics":        topics,
+            "tone":          tone,
         }
 
     except Exception as exc:
@@ -87,8 +133,15 @@ async def summarise_channel(client, identifier: str) -> dict:
             "display_name":  identifier.lstrip("@"),
             "summary":       f"Could not fetch channel: {exc}",
             "message_count": 0,
-            "updated_at":    datetime.now(timezone.utc).isoformat(),
+            "updated_at":    now.isoformat(),
             "error":         True,
+            "hourly_counts": [0] * 24,
+            "hourly_labels": [
+                (now - timedelta(hours=23 - i)).strftime("%H:00")
+                for i in range(24)
+            ],
+            "topics":        [],
+            "tone":          "neutral",
         }
 
 # ---------------------------------------------------------------------------
