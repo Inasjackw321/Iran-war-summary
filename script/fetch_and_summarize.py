@@ -103,32 +103,48 @@ def build_briefing(channels_data, now):
         ch["display_name"] for ch in channels_data if ch["texts"]
     )
 
-    prompt = f"""You are a senior intelligence analyst. Based on the raw Telegram messages below from {len(sections)} sources covering the last 24 hours, produce a comprehensive intelligence briefing about the Iran war situation.
+    prompt = f"""You are a senior intelligence analyst. Based on the raw Telegram messages below from {len(sections)} sources covering the last 24 hours, produce a comprehensive intelligence briefing on the Iran war and Middle East situation.
 
 Date: {date_str}
 Sources: {source_list}
 
-FORMAT THE BRIEFING EXACTLY AS FOLLOWS (use these exact section headers):
+Write each section header in EXACTLY this format — ALL CAPS on its own line, no asterisks or symbols:
 
 EXECUTIVE SUMMARY
-[2-3 sentence overview of the most critical developments]
+2-3 crisp sentences on the single most critical development of the past 24 hours.
 
-SITUATION REPORT
-[Detailed account of military and political events — what happened, where, when, with specific details from the messages]
+IRAN
+Military operations in and against Iran. Strikes, casualties, infrastructure damage, air defence performance, internal political situation, economic impact, leadership decisions.
+
+ISRAEL
+Israeli military operations, casualties, home front air defence, political decisions, civilian impact, strategic objectives.
+
+GAZA & WEST BANK
+Ground operations, casualties, humanitarian situation, ceasefire or negotiation status, settler activity.
+
+LEBANON
+Hezbollah operations, Israeli strikes, UNIFIL incidents, displacement, cross-border exchanges.
+
+SYRIA & IRAQ
+Militia activity, airstrikes, proxy operations, spillover effects, diplomatic developments.
 
 KEY DEVELOPMENTS
-[Numbered list of the 5-8 most significant events or facts]
+Numbered list of the 6-9 most significant facts or events, with specifics (names, locations, numbers).
 
 THREAT ASSESSMENT
-[Analysis of escalation risks, military posture, and danger areas]
+Escalation risks, active flashpoints, military posture changes, red lines.
 
 REGIONAL & INTERNATIONAL RESPONSE
-[How other countries, governments, and actors are responding]
+US posture, Gulf states, EU members, Russia, China, Turkey — specific statements and actions.
 
 INTELLIGENCE NOTES
-[Contradictions between sources, unverified claims, or notable gaps]
+Contradictions between sources, unverified claims, propaganda indicators, reporting gaps.
 
-Be specific. Use names, places, numbers, and dates from the raw messages. Write in clear professional English. Do not add disclaimers or commentary outside the briefing format.
+Rules:
+- Use names, places, numbers, and dates from the messages.
+- Do NOT wrap section headers in asterisks or markdown.
+- Do NOT add any text before EXECUTIVE SUMMARY.
+- Write in clear professional English.
 
 --- RAW INTELLIGENCE FEED ---
 
