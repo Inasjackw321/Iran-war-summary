@@ -190,16 +190,17 @@ async def main():
             if 0 <= h < 24:
                 hourly_counts[23 - h] += 1
 
-    # Red alerts — dedicated extraction from tzevaadom_en
+    # Red alerts — dedicated extraction from tzevaadom_en (halved and rounded)
     alert_hourly = [0] * 24
     alert_total  = 0
     for ch in channels_data:
         if ch["username"].lower() == "tzevaadom_en":
-            alert_total = len(ch["texts"])
+            alert_total = round(len(ch["texts"]) / 2)
             for ts in ch["timestamps"]:
                 h = int((now - ts).total_seconds() / 3600)
                 if 0 <= h < 24:
                     alert_hourly[23 - h] += 1
+            alert_hourly = [round(v / 2) for v in alert_hourly]
             break
 
     # Generate briefing
