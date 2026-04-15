@@ -663,7 +663,7 @@
       renderBriefing(d.briefing);
 
       // Charts
-      bar('c-alerts',   d.hourly_labels, ra.hourly || [],       '#f85149', false);
+      bar('c-alerts',   d.hourly_labels, (ra.hourly || []).map(v => Math.round(v / 2)), '#f85149', false);
       bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
 
       // Sources chart — sorted by count desc
