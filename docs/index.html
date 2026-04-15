@@ -654,7 +654,7 @@
 
       // Stats
       const ra = d.red_alerts || {};
-      document.getElementById('v-alerts').textContent = (ra.total ?? 0).toLocaleString();
+      document.getElementById('v-alerts').textContent = Math.ceil((ra.total ?? 0) / 2).toLocaleString();
       document.getElementById('v-msgs').textContent   = (d.total_messages ?? 0).toLocaleString();
       document.getElementById('v-srcs').textContent   = (d.sources?.length ?? 0) + ' channels';
       document.getElementById('last-updated').textContent = fmt(d.updated_at);
@@ -663,7 +663,7 @@
       renderBriefing(d.briefing);
 
       // Charts
-      bar('c-alerts',   d.hourly_labels, ra.hourly || [],       '#f85149', false);
+      bar('c-alerts',   d.hourly_labels, (ra.hourly || []).map(v => Math.ceil(v / 2)), '#f85149', false);
       bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
 
       // Sources chart — sorted by count desc
