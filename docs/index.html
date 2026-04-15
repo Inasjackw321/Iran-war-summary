@@ -395,14 +395,6 @@
       <div class="toc" id="toc"></div>
     </div>
 
-    <!-- Red alert chart -->
-    <div class="card">
-      <div class="card-head">🚨 Red Alert Frequency — 24 h</div>
-      <div class="chart-wrap">
-        <canvas id="c-alerts"></canvas>
-      </div>
-    </div>
-
     <!-- Activity chart -->
     <div class="card">
       <div class="card-head">📡 Combined Activity — 24 h</div>
@@ -663,8 +655,7 @@
       renderBriefing(d.briefing);
 
       // Charts
-      bar('c-alerts',   d.hourly_labels, ra.hourly || [],       '#f85149', false);
-      bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
+bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
 
       // Sources chart — sorted by count desc
       const srcs = [...(d.sources || [])].sort((a,b) => b.count - a.count);
