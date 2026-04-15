@@ -654,7 +654,7 @@
 
       // Stats
       const ra = d.red_alerts || {};
-      document.getElementById('v-alerts').textContent = (ra.total ?? 0).toLocaleString();
+      document.getElementById('v-alerts').textContent = Math.round((ra.total ?? 0) / 2).toLocaleString();
       document.getElementById('v-msgs').textContent   = (d.total_messages ?? 0).toLocaleString();
       document.getElementById('v-srcs').textContent   = (d.sources?.length ?? 0) + ' channels';
       document.getElementById('last-updated').textContent = fmt(d.updated_at);
