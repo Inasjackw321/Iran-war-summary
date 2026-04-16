@@ -361,6 +361,10 @@
   </div>
 </header>
 
+<div style="text-align:center;padding:0.45rem 1rem;font-size:0.72rem;color:#8b949e;background:#0e1018;border-bottom:1px solid #1c2030;letter-spacing:0.03em;">
+  ⚠️ Always double check the information given
+</div>
+
 <div id="loading">Loading intelligence briefing…</div>
 <div id="err"></div>
 
@@ -455,8 +459,7 @@
     { key:"SITUATION REPORT",              flag:"📋",  color:"#58a6ff" },
   ];
 
-  const defByKey = {};
-  DEFS.forEach(d => defByKey[d.key] = d);
+  const defByKey = Object.fromEntries(DEFS.map(d => [d.key, d]));
 
   /* ── Parse briefing text into sections ── */
   function parse(text) {
@@ -655,7 +658,7 @@
       // Stats
       const ra = d.red_alerts || {};
       document.getElementById('v-alerts').textContent = Math.round((ra.total ?? 0) / 2).toLocaleString();
-      document.getElementById('v-msgs').textContent   = (d.total_messages ?? 0).toLocaleString();
+      document.getElementById('v-msgs').textContent   = Math.round((d.total_messages ?? 0) / 2).toLocaleString();
       document.getElementById('v-srcs').textContent   = (d.sources?.length ?? 0) + ' channels';
       document.getElementById('last-updated').textContent = fmt(d.updated_at);
 
@@ -663,21 +666,22 @@
       renderBriefing(d.briefing);
 
       // Charts
-      bar('c-alerts',   d.hourly_labels, ra.hourly || [],       '#f85149', false);
-      bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
+      const half = arr => arr.map(v => Math.round(v / 2));
+      bar('c-alerts',   d.hourly_labels, half(ra.hourly || []),       '#f85149', false);
+      bar('c-activity', d.hourly_labels, half(d.hourly_counts || []), '#58a6ff', false);
 
       // Sources chart — sorted by count desc
       const srcs = [...(d.sources || [])].sort((a,b) => b.count - a.count);
       bar('c-sources',
         srcs.map(s => '@' + s.username),
-        srcs.map(s => s.count),
+        srcs.map(s => Math.round(s.count / 2)),
         '#3fb950', true);
 
       // Source chips
       document.getElementById('src-chips').innerHTML =
         (d.sources || []).map(s =>
           `<a class="src" href="https://t.me/${esc(s.username)}" target="_blank" rel="noopener">
-            @${esc(s.username)}<span class="n">${s.count}</span>
+            @${esc(s.username)}<span class="n">${Math.round(s.count / 2)}</span>
           </a>`
         ).join('');
 
