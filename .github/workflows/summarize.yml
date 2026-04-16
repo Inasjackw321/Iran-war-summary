@@ -30,12 +30,20 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_SESSION:  ${{ secrets.TELEGRAM_SESSION }}
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
-        run: python script/fetch_and_summarize.py
+        run: |
+          for attempt in 1 2 3; do
+            python script/fetch_and_summarize.py && break
+            [ $attempt -eq 3 ] && exit 1
+            echo "Attempt $attempt failed — retrying in 30s…"
+            sleep 30
+          done
 
       - name: Commit updated summaries
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/summaries.json
-          git diff --staged --quiet || git commit -m "chore: update summaries $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git diff --staged --quiet && exit 0
+          git commit -m "chore: update summaries $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git pull --rebase origin HEAD
           git push
