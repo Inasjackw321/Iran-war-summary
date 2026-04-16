@@ -7,13 +7,12 @@ Writes the result to docs/summaries.json for GitHub Pages to serve.
 import asyncio
 import json
 import os
-import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-import google.generativeai as genai
+from google import genai
 
 # ---------------------------------------------------------------------------
 # Config
@@ -21,8 +20,7 @@ import google.generativeai as genai
 API_ID   = int(os.environ["TELEGRAM_API_ID"])
 API_HASH = os.environ["TELEGRAM_API_HASH"]
 SESSION  = os.environ["TELEGRAM_SESSION"]
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-2.5-flash")
+gemini   = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 ROOT = Path(__file__).parent.parent
 
@@ -207,8 +205,9 @@ async def main():
 
     if prompt:
         print(f"\nGenerating briefing from {total_messages} messages…")
-        raw = model.generate_content(prompt).text.strip()
-        briefing_text = raw
+        briefing_text = gemini.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
+        ).text.strip()
     else:
         briefing_text = "No messages found in the last 24 hours across monitored channels."
 
