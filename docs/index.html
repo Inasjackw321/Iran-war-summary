@@ -343,9 +343,89 @@
       padding: 0.8rem 1rem;
       margin-bottom: 1rem;
     }
+
+    /* ── Beta popup ── */
+    #beta-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+    #beta-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+      max-width: 320px;
+      width: calc(100% - 2rem);
+      text-align: center;
+    }
+    #beta-box .beta-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--orange);
+      background: #2a1a08;
+      border: 1px solid var(--orange);
+      border-radius: 3px;
+      padding: 0.15em 0.55em;
+      margin-bottom: 0.75rem;
+    }
+    #beta-box h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f0f3f6;
+      margin-bottom: 0.5rem;
+    }
+    #beta-box p {
+      font-size: 0.78rem;
+      color: var(--sub);
+      line-height: 1.6;
+      margin-bottom: 1.1rem;
+    }
+    #beta-box .beta-actions {
+      display: flex; gap: 0.6rem;
+    }
+    #beta-box .btn-try {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: var(--orange);
+      color: #07080c;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border: none; border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #beta-box .btn-try:hover { opacity: 0.88; }
+    #beta-box .btn-dismiss {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: transparent;
+      color: var(--sub);
+      font-size: 0.78rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #beta-box .btn-dismiss:hover { color: var(--text); border-color: #3d4455; }
   </style>
 </head>
 <body>
+
+<!-- Closed screen -->
+<div id="beta-overlay" style="align-items:center;justify-content:center;text-align:center;">
+  <div id="beta-box" style="max-width:360px;">
+    <div class="beta-tag" style="color:var(--red);background:#1a0505;border-color:var(--red);">Closed</div>
+    <h3 style="font-size:1.15rem;margin-bottom:0.6rem;">This website has closed</h3>
+    <p style="margin-bottom:1.2rem;">You can find us at <strong>warsummary.live</strong> — same coverage, new home.</p>
+    <a class="btn-try" href="https://warsummary.live/" style="display:block;text-align:center;">Visit warsummary.live</a>
+  </div>
+</div>
 
 <header>
   <div class="hdr">
