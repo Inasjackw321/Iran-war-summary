@@ -343,9 +343,89 @@
       padding: 0.8rem 1rem;
       margin-bottom: 1rem;
     }
+
+    /* ── Beta popup ── */
+    #beta-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+    #beta-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+      max-width: 320px;
+      width: calc(100% - 2rem);
+      text-align: center;
+    }
+    #beta-box .beta-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--orange);
+      background: #2a1a08;
+      border: 1px solid var(--orange);
+      border-radius: 3px;
+      padding: 0.15em 0.55em;
+      margin-bottom: 0.75rem;
+    }
+    #beta-box h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f0f3f6;
+      margin-bottom: 0.5rem;
+    }
+    #beta-box p {
+      font-size: 0.78rem;
+      color: var(--sub);
+      line-height: 1.6;
+      margin-bottom: 1.1rem;
+    }
+    #beta-box .beta-actions {
+      display: flex; gap: 0.6rem;
+    }
+    #beta-box .btn-try {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: var(--orange);
+      color: #07080c;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border: none; border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #beta-box .btn-try:hover { opacity: 0.88; }
+    #beta-box .btn-dismiss {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      background: transparent;
+      color: var(--sub);
+      font-size: 0.78rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #beta-box .btn-dismiss:hover { color: var(--text); border-color: #3d4455; }
   </style>
 </head>
 <body>
+
+<!-- Closed screen -->
+<div id="beta-overlay" style="align-items:center;justify-content:center;text-align:center;">
+  <div id="beta-box" style="max-width:360px;">
+    <div class="beta-tag" style="color:var(--red);background:#1a0505;border-color:var(--red);">Closed</div>
+    <h3 style="font-size:1.15rem;margin-bottom:0.6rem;">This website has closed</h3>
+    <p style="margin-bottom:1.2rem;">You can find us at <strong>warsummary.live</strong> — same coverage, new home.</p>
+    <a class="btn-try" href="https://warsummary.live/" style="display:block;text-align:center;">Visit warsummary.live</a>
+  </div>
+</div>
 
 <header>
   <div class="hdr">
@@ -360,6 +440,10 @@
     </div>
   </div>
 </header>
+
+<div style="text-align:center;padding:0.45rem 1rem;font-size:0.72rem;color:#8b949e;background:#0e1018;border-bottom:1px solid #1c2030;letter-spacing:0.03em;">
+  ⚠️ Always double check the information given
+</div>
 
 <div id="loading">Loading intelligence briefing…</div>
 <div id="err"></div>
@@ -397,7 +481,7 @@
 
     <!-- Red alert chart -->
     <div class="card">
-      <div class="card-head">🚨 Red alert and all clear messages in Israel (24 hours)</div>
+      <div class="card-head">🚨 Red Alert Frequency — 24 h</div>
       <div class="chart-wrap">
         <canvas id="c-alerts"></canvas>
       </div>
@@ -455,8 +539,7 @@
     { key:"SITUATION REPORT",              flag:"📋",  color:"#58a6ff" },
   ];
 
-  const defByKey = {};
-  DEFS.forEach(d => defByKey[d.key] = d);
+  const defByKey = Object.fromEntries(DEFS.map(d => [d.key, d]));
 
   /* ── Parse briefing text into sections ── */
   function parse(text) {
@@ -654,7 +737,7 @@
 
       // Stats
       const ra = d.red_alerts || {};
-      document.getElementById('v-alerts').textContent = Math.ceil((ra.total ?? 0) / 2).toLocaleString();
+      document.getElementById('v-alerts').textContent = Math.round((ra.total ?? 0) / 2).toLocaleString();
       document.getElementById('v-msgs').textContent   = (d.total_messages ?? 0).toLocaleString();
       document.getElementById('v-srcs').textContent   = (d.sources?.length ?? 0) + ' channels';
       document.getElementById('last-updated').textContent = fmt(d.updated_at);
@@ -663,8 +746,8 @@
       renderBriefing(d.briefing);
 
       // Charts
-      bar('c-alerts',   d.hourly_labels, (ra.hourly || []).map(v => Math.ceil(v / 2)), '#f85149', false);
-      bar('c-activity', d.hourly_labels, d.hourly_counts || [], '#58a6ff', false);
+      bar('c-alerts',   d.hourly_labels, (ra.hourly || []).map(v => Math.round(v / 2)), '#f85149', false);
+      bar('c-activity', d.hourly_labels, d.hourly_counts || [],                         '#58a6ff', false);
 
       // Sources chart — sorted by count desc
       const srcs = [...(d.sources || [])].sort((a,b) => b.count - a.count);
