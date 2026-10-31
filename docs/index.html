@@ -417,16 +417,13 @@
 </head>
 <body>
 
-<!-- Beta popup -->
-<div id="beta-overlay">
-  <div id="beta-box">
-    <div class="beta-tag">Notice</div>
-    <h3>This site is going away</h3>
-    <p>This page won't be available much longer. We're not going anywhere — head over to <strong>warsummary.live</strong> for the new home of our briefings. We're still here, just moved.</p>
-    <div class="beta-actions">
-      <a class="btn-try" href="https://warsummary.live/" target="_blank" rel="noopener" onclick="dismissBeta()">Go to warsummary.live</a>
-      <button class="btn-dismiss" onclick="dismissBeta()">Dismiss</button>
-    </div>
+<!-- Closed screen -->
+<div id="beta-overlay" style="align-items:center;justify-content:center;text-align:center;">
+  <div id="beta-box" style="max-width:360px;">
+    <div class="beta-tag" style="color:var(--red);background:#1a0505;border-color:var(--red);">Closed</div>
+    <h3 style="font-size:1.15rem;margin-bottom:0.6rem;">This website has closed</h3>
+    <p style="margin-bottom:1.2rem;">You can find us at <strong>warsummary.live</strong> — same coverage, new home.</p>
+    <a class="btn-try" href="https://warsummary.live/" style="display:block;text-align:center;">Visit warsummary.live</a>
   </div>
 </div>
 
@@ -521,10 +518,6 @@
 </div>
 
 <script>
-  function dismissBeta() {
-    document.getElementById('beta-overlay').style.display = 'none';
-  }
-
   const REFRESH = 3 * 60 * 60 * 1000;
   let charts = {};
   let nextAt = null;
